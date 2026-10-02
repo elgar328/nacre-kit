@@ -150,14 +150,6 @@ impl std::error::Error for KitError {}
 pub(crate) fn op_words(e: &OpError) -> String {
     let fact = match e {
         // Measured reaching an author through the app, in the order a person meets them.
-        OpError::PocketNotBlind => {
-            "a pocket has to stop inside the material — this depth reaches through, so there \
-             is no floor"
-        }
-        OpError::PadMissesFace => {
-            "the pad's outline does not meet the face — an outline hanging over the edge \
-             still touches, this one misses it entirely"
-        }
         OpError::NonPlanarFace => {
             // Two callers, not one: a pad or pocket aiming at a face, and a sketch whose
             // frame names a curved surface. Saying "pad and pocket" would be wrong for the
@@ -169,10 +161,10 @@ pub(crate) fn op_words(e: &OpError) -> String {
             "the same vertex is named twice — two points do not fix a plane"
         }
         OpError::DistOutsideDecimalWindow => {
-            // **Says no operation's name.** This one is raised from four places — a plane's
-            // offset, a prism's depth, and a pad's or pocket's — so naming `extrude` (the
-            // case it was first provoked from) would be a lie to three of them. The sketch
-            // layer's own words for its sibling refusal, said the same way.
+            // **Says no operation's name.** This one is raised for a plane's offset as well as a
+            // prism's depth (an extrude's, a pad's, a pocket's), so naming `extrude` (the case
+            // it was first provoked from) would be a lie to the offset. The sketch layer's own
+            // words for its sibling refusal, said the same way.
             "a distance is outside the exact decimal window, so it has no rational form to \
              build with"
         }
@@ -193,7 +185,6 @@ pub(crate) fn op_words(e: &OpError) -> String {
         | OpError::NestedHole { .. }
         | OpError::ProfileUndecidable
         | OpError::ArcSweepNotQuarterTurn
-        | OpError::NonPositiveDistance
         | OpError::ZeroDistance
         | OpError::PlaneWithoutExactForm
         | OpError::FrameOutsideDecimalWindow
