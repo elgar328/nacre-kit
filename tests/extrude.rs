@@ -1,7 +1,7 @@
 //! Extrude on the three world planes, both directions, through the sketch value.
-//! The kernel's `dist` is a positive thickness whose direction belongs to the frame; a
-//! negative script `dist` is translated by re-stating the same plane with the opposite
-//! normal (same handle, opposite frame — the kernel's own rule for choosing a side).
+//! The kernel's `dist` is signed: the frame says where its normal points, the sign which side
+//! of the plane the body takes, so a negative script `dist` is the kernel's negative distance
+//! in the plane's own frame.
 //!
 //! The direction tests assert the **full bounds**, not just the normal axis — the
 //! first version checked only the normal extent and let a mirrored in-plane footprint
@@ -73,8 +73,8 @@ fn each_world_plane_extrudes_along_its_normal() {
     assert_close(hi, [3.0, 2.0, 4.0], "ZX hi");
 }
 
-/// −dist grows along the −normal and keeps the same footprint — the whole point of
-/// the axis-pinned flipped statement.
+/// −dist grows along the −normal and keeps the same footprint — the sweep turns, the
+/// frame's axes do not.
 #[test]
 fn a_negative_dist_extrudes_the_other_way() {
     let (lo, hi) = bounds_of(WorldPlane::XY, -2.0);

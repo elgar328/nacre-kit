@@ -48,8 +48,7 @@ fn err_of(steps: &[Step]) -> String {
 }
 
 /// ① A world plane **value** builds the same solid as the K2 world-plane sketch, bit
-/// for bit — in both directions and two-sided. This is also the no-breakage proof for
-/// folding K1's world-only flipped road into the general one.
+/// for bit — in both directions and two-sided.
 #[test]
 fn a_world_plane_value_is_the_world_plane() {
     for dist in [Dist::One(2.0), Dist::One(-2.0), Dist::Both(-1.0, 2.0)] {
@@ -119,7 +118,7 @@ fn moved_and_tilted_planes_carry_sketches() {
 
 /// ③ `plane(p, { offset })` interns onto the very plane a box top already lies on —
 /// the same kernel handle, not a second plane an ulp away — and a sketch on it sits
-/// at the offset; a **negative** extrude there exercises the flipped-offset road.
+/// at the offset, and extrudes either way off it.
 #[test]
 fn an_offset_plane_interns_onto_the_box_top() {
     let steps = vec![
@@ -159,7 +158,7 @@ fn an_offset_plane_interns_onto_the_box_top() {
         .surface;
     assert_eq!(plane, top_surface, "one plane, one handle");
 
-    // The sketch on the offset plane extrudes from z = 2 — up and (flipped road) down.
+    // The sketch on the offset plane extrudes from z = 2 — up and down.
     for (i, want) in [(4usize, (2.0, 3.0)), (5, (1.0, 2.0))] {
         let val = out.values[i]
             .as_ref()
@@ -230,9 +229,9 @@ fn queries_refuse_non_solids() {
 }
 
 /// ⑥ A three-point plane extrudes either way in its own frame — backward is a negative sweep,
-/// and the forward and backward prisms meet only on their base. A **range** off it still
-/// declines: the range's start plane is a parallel re-statement whose axes are the user's
-/// statement to make, not the kit's to invent.
+/// and the forward and backward prisms meet only on their base; a range that ends on the plane
+/// is that backward sweep. A range **off** the plane still declines: its start plane is a
+/// parallel re-statement whose axes are the user's statement to make, not the kit's to invent.
 #[test]
 fn a_points_plane_extrudes_both_ways_but_ranges_from_its_own_statement() {
     let plane = Step::Plane {
@@ -251,11 +250,25 @@ fn a_points_plane_extrudes_both_ways_but_ranges_from_its_own_statement() {
             kind: nacre_kit::KitBool::Fuse,
             args: vec![ValueId(2), ValueId(3)],
         },
+        extrude(1, Dist::Both(-1.0, 0.0)),
+        extrude(1, Dist::Both(0.0, 1.0)),
     ];
-    for (i, want) in [(2, 1.0), (3, 1.0), (4, 2.0)] {
+    for (i, want) in [(2, 1.0), (3, 1.0), (4, 2.0), (5, 1.0), (6, 1.0)] {
         let v = volume_of(&steps, i);
         assert!((v - want).abs() < 1e-9, "value {i}: volume {v}");
     }
+    // A range with an end on the plane is the one-sided sweep, where it stands.
+    let out = build(&steps, None).expect("build");
+    let bounds = |i: usize| {
+        let s = out.values[i]
+            .as_ref()
+            .and_then(|v| v.as_solid())
+            .expect("a solid");
+        let (lo, hi) = nacre::props::bounds(&out.model, s.bodies[0]).expect("bounds");
+        (lo.as_array(), hi.as_array())
+    };
+    assert_eq!(bounds(5), bounds(3), "Both(-1, 0) is One(-1)");
+    assert_eq!(bounds(6), bounds(2), "Both(0, 1) is One(1)");
     let msg = err_of(&[
         plane,
         sketch_on(PlaneRef::Value(ValueId(0)), 1.0, 1.0),

@@ -944,7 +944,15 @@ impl Builder {
                         ),
                     });
                 }
-                let bodies = self.extrude_span(step, sketch, lo, hi - lo)?;
+                // A range that ends on the sketch's plane is one sweep against its normal, in the
+                // plane's own frame — no start plane to re-state, so a plane whose parallel
+                // re-statement is the user's to make (three points, three vertices) takes it too.
+                // (A range that starts there is `extrude_span`'s own `start == 0` road.)
+                let bodies = if hi == 0.0 {
+                    self.extrude_one(step, sketch, lo)?
+                } else {
+                    self.extrude_span(step, sketch, lo, hi - lo)?
+                };
                 self.model.rebuild_adjacency();
                 Ok(SolidValue { bodies })
             }

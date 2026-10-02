@@ -4,7 +4,7 @@
 //! What is worth measuring: the volumes the arcs claim (`π` shows up exactly where a quarter
 //! turn was drawn), the normal form the kernel applies (two fillets that meet are one half
 //! circle — a rectangle becomes a slot), the cylinder primitive and a circle sketch agreeing bit
-//! for bit, the mirrored extrude keeping the footprint, and every refusal being a sentence.
+//! for bit, a backward extrude keeping the footprint, and every refusal being a sentence.
 
 use nacre_kit::{
     CircleSize, Corner, CylAnchor, Dist, KitAxis, KitBool, KitError, Path, PenPath, Pivot,
@@ -143,10 +143,10 @@ fn a_pen_slot_closes_on_its_last_arc() {
     );
 }
 
-/// ④ A negative extrude states the sketch in the flipped frame: `y` and every sweep change
-/// sign as literals, and the footprint — hence the volume — is the same.
+/// ④ A negative extrude sweeps the slot against its plane's normal in the same frame — its arcs
+/// and their sweeps stay as written — and the footprint, hence the volume, is the same.
 #[test]
-fn a_mirrored_slot_keeps_its_footprint() {
+fn a_slot_extruded_backward_keeps_its_footprint() {
     let up = out_of(&[
         sketch(vec![Path::Pen(pen_slot(30.0, 5.0))]),
         extrude(0, 2.0),
