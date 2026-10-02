@@ -221,7 +221,7 @@ checksum = "cf8baf1c55e62ffcace7a9f06f4bd9cd3f0c4beb022d3b367256b91b87513d98"
 
 [[package]]
 name = "nacre"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-exact",
  "nacre-geom",
@@ -237,7 +237,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-exact"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "astro-float",
  "num-bigint",
@@ -248,7 +248,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-geom"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-exact",
  "nacre-math",
@@ -257,7 +257,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-judge"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "astro-float",
  "nacre-exact",
@@ -279,11 +279,11 @@ dependencies = [
 
 [[package]]
 name = "nacre-math"
-version = "0.0.1"
+version = "0.0.2-dev"
 
 [[package]]
 name = "nacre-ops"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-exact",
  "nacre-geom",
@@ -297,14 +297,14 @@ dependencies = [
 
 [[package]]
 name = "nacre-predicates"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "geometry-predicates",
 ]
 
 [[package]]
 name = "nacre-props"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-geom",
  "nacre-math",
@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-step"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-geom",
  "nacre-math",
@@ -325,11 +325,11 @@ dependencies = [
 
 [[package]]
 name = "nacre-store"
-version = "0.0.1"
+version = "0.0.2-dev"
 
 [[package]]
 name = "nacre-tess"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-geom",
  "nacre-math",
@@ -340,7 +340,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-topo"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-exact",
  "nacre-geom",
@@ -350,7 +350,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-validate"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "nacre-geom",
  "nacre-math",
