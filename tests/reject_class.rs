@@ -179,8 +179,13 @@ fn an_impossibility_arrives_classified() {
 /// "none" is the honest form of that.)
 #[test]
 fn an_operation_error_carries_no_class() {
-    // A pocket deeper than the solid: `PocketNotBlind`, an `OpError`, not a boolean rejection.
-    let base = cuboid([0.0, 0.0, 0.0], [4.0, 4.0, 2.0]);
+    // A pad aimed at a cylinder's side: `NonPlanarFace`, an `OpError`, not a boolean rejection.
+    let base = Step::Cylinder {
+        radius: 4.0,
+        height: 4.0,
+        at: nacre_kit::CylAnchor::Center([0.0, 0.0, 0.0]),
+        axis: nacre_kit::KitAxis::Z,
+    };
     let square = Step::Sketch {
         plane: PlaneRef::World(WorldPlane::XY),
         paths: vec![Path::Pen(pen(
@@ -189,35 +194,35 @@ fn an_operation_error_carries_no_class() {
         ))],
     };
     let out = build(std::slice::from_ref(&base), None).expect("the base builds");
-    let face = out
+    let curved = out
         .faces_of(v(0))
         .expect("solid faces")
         .into_iter()
-        .find(|f| f.normal == Some([0.0, 0.0, 1.0]))
-        .expect("a top face");
+        .find(|f| f.normal.is_none())
+        .expect("the lateral face");
     let steps = vec![
         base,
         square,
-        Step::Pocket {
+        Step::Pad {
             face: nacre_kit::FaceRef {
                 of: v(0),
-                face: face.face,
+                face: curved.face,
             },
             sketch: v(1),
-            dist: 5.0,
-        }, // deeper than the 2.0 solid
+            dist: 1.0,
+        },
     ];
     let err = match build(&steps, None) {
         Err(e) => e,
-        Ok(_) => panic!("a through-pocket declines"),
+        Ok(_) => panic!("a pad on a curved face declines"),
     };
     let KitError::Kernel { class, what, .. } = &err else {
         panic!("a kernel rejection, got {err:?}");
     };
     assert_eq!(*class, None, "OpError carries no classification yet");
-    assert!(what.contains("has to stop inside the material"), "{what}");
+    assert!(what.contains("a sketch stands on a flat face"), "{what}");
     assert!(
-        what.contains("[PocketNotBlind]"),
+        what.contains("[NonPlanarFace]"),
         "the handle to search with: {what}"
     );
 }
@@ -351,7 +356,7 @@ fn the_step_rides_the_value_not_the_sentence() {
     };
     let kernel_plain = KitError::Kernel {
         step: 5,
-        what: "PocketNotBlind: the pocket breaks through".to_string(),
+        what: "a sketch stands on a flat face [NonPlanarFace]".to_string(),
         class: None,
         blame: None,
         mark: None,
@@ -367,7 +372,7 @@ fn the_step_rides_the_value_not_the_sentence() {
 
     for (err, at, owed) in [
         (&kernel_classed, 3, "does not build this"),
-        (&kernel_plain, 5, "PocketNotBlind"),
+        (&kernel_plain, 5, "NonPlanarFace"),
         (&program, 0, "must be positive"),
         (&internal, 7, "invariant broke"),
     ] {

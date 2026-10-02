@@ -7,8 +7,8 @@
 //! for bit, the mirrored extrude keeping the footprint, and every refusal being a sentence.
 
 use nacre_kit::{
-    CircleSize, Corner, CylAnchor, Dist, KitAxis, KitError, Path, PenPath, Pivot, PlaneRef,
-    SketchSeg, Step, ValueId, WorldPlane, build,
+    CircleSize, Corner, CylAnchor, Dist, KitAxis, KitBool, KitError, Path, PenPath, Pivot,
+    PlaneRef, SketchSeg, Step, ValueId, WorldPlane, build,
 };
 
 const PI: f64 = std::f64::consts::PI;
@@ -1073,4 +1073,61 @@ fn a_bracket_of_two_filleted_plates_fuses() {
     // coplanar walls merge into one L each.
     let faces = out.faces_of(ValueId(4)).expect("faces");
     assert_eq!(faces.len(), 16, "the fused bracket's faces");
+}
+
+/// A filleted profile swept both ways off its plane, then fused: the two fillet walls lie on one
+/// cylinder, and the kernel refuses a cylinder shared by two solids (`cylinder_pair_contact`).
+/// Today's answer — measured the same whether the backward sweep restates the plane flipped (its
+/// fillet axis then runs the other way: two statements of one cylinder) or sweeps against the
+/// plane's own normal (one statement). A ranged extrude (`Dist::Both`) is the one sweep that
+/// builds this shape.
+#[test]
+fn a_fillet_swept_both_ways_and_fused_meets_itself_on_a_cylinder() {
+    let fillet = Some(Corner::Fillet(1.0));
+    let sketch = Step::Sketch {
+        plane: PlaneRef::World(WorldPlane::XY),
+        paths: vec![Path::Pen(PenPath {
+            start: [0.0, 0.0],
+            segs: vec![
+                SketchSeg::LineTo {
+                    to: [4.0, 0.0],
+                    corner: fillet,
+                },
+                SketchSeg::LineTo {
+                    to: [4.0, 3.0],
+                    corner: fillet,
+                },
+                line_to([0.0, 3.0]),
+            ],
+            close_corner: None,
+        })],
+    };
+    let both = |dist| {
+        vec![
+            sketch.clone(),
+            Step::Extrude {
+                sketch: ValueId(0),
+                dist,
+            },
+        ]
+    };
+    let mut steps = both(Dist::One(2.0));
+    steps.push(Step::Extrude {
+        sketch: ValueId(0),
+        dist: Dist::One(-2.0),
+    });
+    steps.push(Step::Boolean {
+        kind: KitBool::Fuse,
+        args: vec![ValueId(1), ValueId(2)],
+    });
+    match build(&steps, None) {
+        Err(e) => assert!(e.to_string().contains("[cylinder_pair_contact]"), "{e}"),
+        Ok(_) => panic!("the fused halves build today — the cylinder-pair gate moved"),
+    }
+    let out = build(&both(Dist::Both(-2.0, 2.0)), None).expect("the ranged sweep builds");
+    let v = out.values[1]
+        .as_ref()
+        .and_then(|v| v.as_solid())
+        .expect("solid");
+    assert_eq!(v.bodies.len(), 1);
 }

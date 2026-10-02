@@ -121,23 +121,20 @@ enum Item {
     Arc { from: P, edge: Edge2d },
 }
 
-/// Lower a sketch to the kernel's rings, one per path, in the order written. `mirror` flips `y`
-/// and every sweep — the flipped frame a negative extrude states its sketch in — as an exact
-/// sign change on the author's literals.
-pub(crate) fn lower(step: usize, paths: &[Path], mirror: bool) -> Result<Vec<Ring2d>, KitError> {
+/// Lower a sketch to the kernel's rings, one per path, in the order written.
+pub(crate) fn lower(step: usize, paths: &[Path]) -> Result<Vec<Ring2d>, KitError> {
     if paths.is_empty() {
         return Err(program(
             step,
             "an empty sketch — draw at least one closed path".into(),
         ));
     }
-    let my = |p: [f64; 2]| if mirror { [p[0], -p[1]] } else { p };
     paths
         .iter()
         .map(|path| match path {
-            Path::Pen(pen) => lower_path(step, pen, mirror),
+            Path::Pen(pen) => lower_path(step, pen),
             Path::Circle { center, size } => {
-                let c = lift(step, my(*center))?;
+                let c = lift(step, *center)?;
                 let dec = |x: f64| {
                     Rat::from_decimal(x).ok_or_else(|| {
                         program(step, format!("{x} is outside the exact decimal window"))
@@ -158,12 +155,10 @@ pub(crate) fn lower(step: usize, paths: &[Path], mirror: bool) -> Result<Vec<Rin
         .collect()
 }
 
-fn lower_path(step: usize, path: &PenPath, mirror: bool) -> Result<Ring2d, KitError> {
-    let my = |p: [f64; 2]| if mirror { [p[0], -p[1]] } else { p };
-    let ms = |s: f64| if mirror { -s } else { s };
+fn lower_path(step: usize, path: &PenPath) -> Result<Ring2d, KitError> {
     // 1. Walk the pen. Straight steps become sharp vertices; arcs are stated at once (the kernel
     //    computes their ends in `Rat`, and that end is where the pen stands next).
-    let start = lift(step, my(path.start))?;
+    let start = lift(step, path.start)?;
     let mut items: Vec<Item> = vec![Item::Vertex {
         at: start,
         corner: path.close_corner,
@@ -172,7 +167,7 @@ fn lower_path(step: usize, path: &PenPath, mirror: bool) -> Result<Ring2d, KitEr
     for seg in &path.segs {
         match seg {
             SketchSeg::LineTo { to, corner } => {
-                let to = lift(step, my(*to))?;
+                let to = lift(step, *to)?;
                 if to == pos {
                     return Err(program(
                         step,
@@ -190,11 +185,9 @@ fn lower_path(step: usize, path: &PenPath, mirror: bool) -> Result<Ring2d, KitEr
                 pos = to;
             }
             SketchSeg::Arc { center, sweep } => {
-                let c = lift(step, my(*center))?;
-                let (edge, end) = kernel(
-                    step,
-                    arc_turns_rat(c, pos, quarter_turns(step, ms(*sweep))?),
-                )?;
+                let c = lift(step, *center)?;
+                let (edge, end) =
+                    kernel(step, arc_turns_rat(c, pos, quarter_turns(step, *sweep)?))?;
                 items.push(Item::Arc { from: pos, edge });
                 pos = end;
                 items.push(Item::Vertex {
@@ -434,12 +427,8 @@ fn lower_path(step: usize, path: &PenPath, mirror: bool) -> Result<Ring2d, KitEr
 }
 
 /// The kernel's profiles for a sketch — the ring court, sitting once.
-pub(crate) fn classify(
-    step: usize,
-    paths: &[Path],
-    mirror: bool,
-) -> Result<Vec<Profile2d>, KitError> {
-    let rings = lower(step, paths, mirror)?;
+pub(crate) fn classify(step: usize, paths: &[Path]) -> Result<Vec<Profile2d>, KitError> {
+    let rings = lower(step, paths)?;
     from_paths(rings).map_err(|e| translate(step, e))
 }
 

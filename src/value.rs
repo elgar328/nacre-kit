@@ -84,9 +84,9 @@ impl Value {
 /// A sketch value: the plane it lives on and the **statement** — the author's pen paths
 /// and circles, literals untouched. Every consumer lowers the statement itself
 /// (`sketch::classify`: corners resolved, arcs turned, all in rationals straight into the
-/// kernel's `Rat` doors), so a mirrored extrude flips the literals' signs exactly rather
-/// than mirroring computed f64 points. Validation already happened at the sketch step, so
-/// an invalid sketch is never stored.
+/// kernel's `Rat` doors), so the kernel receives the literals the author wrote rather than
+/// computed f64 points. Validation already happened at the sketch step, so an invalid sketch
+/// is never stored.
 #[derive(Clone, Debug)]
 pub struct SketchValue {
     pub plane: PlaneRef,
@@ -94,8 +94,8 @@ pub struct SketchValue {
 }
 
 /// A built datum plane: the interned kernel handle, the frame a sketch on it extrudes
-/// through, and the statement it came from — the raw material for the *flipped*
-/// re-statement a negative extrude needs.
+/// through, and the statement it came from — the raw material for the parallel
+/// re-statement a ranged extrude starts on.
 #[derive(Clone, Debug)]
 pub struct PlaneValue {
     /// The interned surface — the same handle for every statement of the same plane

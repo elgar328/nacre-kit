@@ -3,8 +3,8 @@
 //! read `vertices_of`, choose by coordinates, record the indices.
 
 use nacre_kit::{
-    Anchor, Dist, KitAxis, Path, PenPath, Pivot, PlaneRef, PlaneSpec, SketchSeg, Step, ValueId,
-    VertexRef, build,
+    Anchor, Dist, KitAxis, KitBool, Path, PenPath, Pivot, PlaneRef, PlaneSpec, SketchSeg, Step,
+    ValueId, VertexRef, build,
 };
 
 fn line_to(to: [f64; 2]) -> SketchSeg {
@@ -282,19 +282,47 @@ fn through_rejections_are_honest() {
         },
     ]);
     assert!(msg.contains("not a vertex of value 1"), "{msg}");
+}
 
-    // Backward extrudes are the opposite statement's job.
-    let msg = err_of(vec![
+/// ②b A backward extrude off a through-plane sweeps against its normal in the same frame: the
+/// forward and backward prisms meet only on their base, so their fusion holds both.
+#[test]
+fn a_through_plane_extrudes_backward_too() {
+    let prefix = vec![cube4()];
+    let out = build(&prefix, None).expect("build");
+    let vs = [
+        pick(&out, 0, [4.0, 0.0, 0.0]),
+        pick(&out, 0, [0.0, 4.0, 0.0]),
+        pick(&out, 0, [0.0, 0.0, 4.0]),
+    ];
+    let steps = vec![
         cube4(),
         Step::Plane {
-            spec: PlaneSpec::Through {
-                vertices: [a, b, c],
-            },
+            spec: PlaneSpec::Through { vertices: vs },
         },
         sketch_on(PlaneRef::Value(ValueId(1)), 1.0, 1.0),
+        extrude(2, 1.0),
         extrude(2, -1.0),
-    ]);
-    assert!(msg.contains("opposite vertex order"), "{msg}");
+        Step::Boolean {
+            kind: KitBool::Fuse,
+            args: vec![ValueId(3), ValueId(4)],
+        },
+    ];
+    let out = build(&steps, None).expect("build");
+    let vol = |i: usize| {
+        let v = out.values[i]
+            .as_ref()
+            .and_then(|v| v.as_solid())
+            .expect("solid");
+        (v.bodies.len(), v.volume(&out.model))
+    };
+    for (i, want) in [(3, (1, 1.0)), (4, (1, 1.0)), (5, (1, 2.0))] {
+        let (n, v) = vol(i);
+        assert!(
+            n == want.0 && (v - want.1).abs() < 1e-9,
+            "value {i}: {n} bodies, volume {v}"
+        );
+    }
 }
 
 fn err_of(steps: Vec<Step>) -> String {

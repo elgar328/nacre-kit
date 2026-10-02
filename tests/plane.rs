@@ -229,34 +229,42 @@ fn queries_refuse_non_solids() {
     }
 }
 
-/// ⑥ A three-point plane's opposite frame is the user's statement to make — the
-/// backward extrude rejects with the swap guidance, one-sided and two-sided alike.
+/// ⑥ A three-point plane extrudes either way in its own frame — backward is a negative sweep,
+/// and the forward and backward prisms meet only on their base. A **range** off it still
+/// declines: the range's start plane is a parallel re-statement whose axes are the user's
+/// statement to make, not the kit's to invent.
 #[test]
-fn a_points_plane_extrudes_forward_only() {
-    // The two spellings decline for **different** reasons, and each says its own.
-    // A backward extrude wants the plane stated the other way round; a range wants it stated
-    // where the range starts. Both are the user's statement to make, not the kit's to invent.
-    for (dist, guidance) in [
-        (Dist::One(-1.0), "xPoint and yHint swapped"),
-        (Dist::Both(-1.0, 1.0), "where the range starts"),
-    ] {
-        let steps = vec![
-            Step::Plane {
-                spec: PlaneSpec::Points {
-                    origin: [0.0, 0.0, 0.0],
-                    x_point: [1.0, 0.0, 1.0],
-                    y_hint: [0.0, 1.0, 0.0],
-                },
-            },
-            sketch_on(PlaneRef::Value(ValueId(0)), 1.0, 1.0),
-            extrude(1, dist),
-        ];
-        let msg = err_of(&steps);
-        assert!(
-            msg.contains(guidance),
-            "the guidance is the statement itself: {msg}"
-        );
+fn a_points_plane_extrudes_both_ways_but_ranges_from_its_own_statement() {
+    let plane = Step::Plane {
+        spec: PlaneSpec::Points {
+            origin: [0.0, 0.0, 0.0],
+            x_point: [1.0, 0.0, 1.0],
+            y_hint: [0.0, 1.0, 0.0],
+        },
+    };
+    let steps = vec![
+        plane.clone(),
+        sketch_on(PlaneRef::Value(ValueId(0)), 1.0, 1.0),
+        extrude(1, Dist::One(1.0)),
+        extrude(1, Dist::One(-1.0)),
+        Step::Boolean {
+            kind: nacre_kit::KitBool::Fuse,
+            args: vec![ValueId(2), ValueId(3)],
+        },
+    ];
+    for (i, want) in [(2, 1.0), (3, 1.0), (4, 2.0)] {
+        let v = volume_of(&steps, i);
+        assert!((v - want).abs() < 1e-9, "value {i}: volume {v}");
     }
+    let msg = err_of(&[
+        plane,
+        sketch_on(PlaneRef::Value(ValueId(0)), 1.0, 1.0),
+        extrude(1, Dist::Both(-1.0, 1.0)),
+    ]);
+    assert!(
+        msg.contains("where the range starts"),
+        "the guidance is the statement itself: {msg}"
+    );
 }
 
 /// ⑥b An offset over a three-point plane has no exact re-statement to pin its frame —

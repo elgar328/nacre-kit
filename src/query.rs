@@ -95,7 +95,7 @@ impl BuildOutput {
         let (o, u, v) = (plane.origin(), plane.x_axis(), plane.y_axis());
         let at = |p: [f64; 2]| (o + u * p[0] + v * p[1]).as_array();
         // The statement validated at its own step; lowering it again cannot fail.
-        let rings = crate::sketch::lower(id.0 as usize, &sketch.paths, false).ok()?;
+        let rings = crate::sketch::lower(id.0 as usize, &sketch.paths).ok()?;
         Some(
             crate::sketch::sample(&rings)
                 .iter()

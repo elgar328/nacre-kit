@@ -163,44 +163,14 @@ struct Piece {
 impl Builder {
     // ---- kernel doors -----------------------------------------------------------
 
-    /// `apply`, with kernel errors translated. `SolidNotLive` is *never* a user error
-    /// — the value layer exists to make it unreachable — so it comes back as
-    /// [`KitError::Internal`].
+    /// `apply`, with kernel errors translated ([`op_error`]).
     fn kapply(
         &mut self,
         step: usize,
         op: &Operation,
         blame: Option<Blame>,
     ) -> Result<OpOutput, KitError> {
-        apply(&mut self.model, op).map_err(|e| match e {
-            OpError::SolidNotLive => KitError::Internal {
-                step,
-                what: "a consumed solid was used again (the automatic-copy scan missed it)"
-                    .to_string(),
-            },
-            // A boolean rejection carries the kernel's classification; an operation-level
-            // error still carries none — that taxonomy is a later step, and it is a
-            // separate question from the words below (`PocketNotBlind` is the operation's
-            // premise breaking, which none of the three classes describes).
-            OpError::Boolean(nacre::ops::BoolError::Rejected { reason, at }) => KitError::Kernel {
-                step,
-                what: reason.to_string(),
-                class: Some(reason.class()),
-                blame,
-                mark: at.map(Mark::from),
-            },
-            // Everything else is an operation-level refusal. `op_words` decides what an
-            // author is told — a sentence, never the bare Rust variant name (a reader
-            // meeting `PocketNotBlind` learns nothing). The words live in that table, so no
-            // variant needs an arm of its own here just to carry them.
-            other => KitError::Kernel {
-                step,
-                what: crate::error::op_words(&other),
-                class: None,
-                blame,
-                mark: None,
-            },
-        })
+        apply(&mut self.model, op).map_err(|e| op_error(step, e, blame))
     }
 
     fn kcopy(&mut self, step: usize, h: Handle<Solid>) -> Result<Handle<Solid>, KitError> {
@@ -221,7 +191,7 @@ impl Builder {
         kind: BoolKind,
         a: Handle<Solid>,
         b: Handle<Solid>,
-        blame: Blame,
+        blame: Option<Blame>,
     ) -> Result<Vec<Handle<Solid>>, KitError> {
         let (solids, report) = nacre::ops::boolean_with_report(&mut self.model, kind, a, b)
             .map_err(|e| match e {
@@ -236,7 +206,7 @@ impl Builder {
                     step,
                     what: reason.to_string(),
                     class: Some(reason.class()),
-                    blame: Some(blame),
+                    blame,
                     mark: at.map(Mark::from),
                 },
             })?;
@@ -411,7 +381,7 @@ impl Builder {
                 // The court sits once, now — an invalid sketch is never stored, and
                 // the error arrives early, with coordinates. What is stored is the
                 // statement; every consumer lowers it again (cheap, deterministic).
-                classify(step, paths, false)?;
+                classify(step, paths)?;
                 Ok(Some(Value::Sketch(SketchValue {
                     plane: *plane,
                     paths: paths.clone(),
@@ -485,8 +455,8 @@ impl Builder {
     }
 
     /// Build a plane value: translate the spec into a kernel datum statement, keep the
-    /// statement itself as [`PlaneSrc`] (the raw material for the flipped re-statement
-    /// a negative extrude needs).
+    /// statement itself as [`PlaneSrc`] (the raw material for the parallel re-statement
+    /// a ranged extrude starts on).
     fn plane_value(&mut self, step: usize, spec: &PlaneSpec) -> Result<PlaneValue, KitError> {
         let (def, src) = match spec {
             PlaneSpec::World(wp) => (
@@ -636,48 +606,17 @@ impl Builder {
         Ok(out.map(|s| s.expect("filled")))
     }
 
-    /// The frame an extrude sweeps through, and whether the sketch's segments must be
-    /// mirrored (`(x, y) → (x, −y)`) to keep the caller's footprint — true exactly on
-    /// the flipped (backward) road.
-    fn extrude_frame(
-        &mut self,
-        step: usize,
-        plane: &PlaneRef,
-        forward: bool,
-    ) -> Result<(SketchFrame, bool), KitError> {
-        if forward {
-            let frame = match plane {
-                PlaneRef::World(wp) => SketchFrame::world(&self.model, world_axis(*wp)),
-                PlaneRef::Value(id) => self.plane_of(step, *id)?.frame,
-            };
-            return Ok((frame, false));
-        }
-        let frame = match plane {
-            PlaneRef::World(wp) => self.flipped_world_frame(step, *wp, [0.0; 3])?,
-            PlaneRef::Value(id) => {
-                let src = self.plane_of(step, *id)?.src.clone();
-                self.flipped_frame(step, &src)?
-            }
-        };
-        Ok((frame, true))
+    /// The frame an extrude sweeps through: the sketch's own plane's, whichever way the extrude
+    /// goes. A backward extrude is the kernel's negative distance in this same frame — the axes,
+    /// and so the author's footprint, stay where they were drawn.
+    fn extrude_frame(&mut self, step: usize, plane: &PlaneRef) -> Result<SketchFrame, KitError> {
+        Ok(match plane {
+            PlaneRef::World(wp) => SketchFrame::world(&self.model, world_axis(*wp)),
+            PlaneRef::Value(id) => self.plane_of(step, *id)?.frame,
+        })
     }
 
-    /// The flipped re-statement road (K1, origin-generalized): the same plane stated
-    /// with the opposite normal — axes pinned (`u′ = +u, v′ = −v`) — is the same
-    /// interned handle with the opposite frame, and the mirrored segments keep the
-    /// caller's world footprint exactly. The axes are world unit vectors, so the
-    /// statement is exact for any decimal origin.
-    fn flipped_world_frame(
-        &mut self,
-        step: usize,
-        wp: WorldPlane,
-        origin: [f64; 3],
-    ) -> Result<SketchFrame, KitError> {
-        self.world_frame_at(step, wp, origin, true)
-    }
-
-    /// **This world plane, at this origin, this way round** — the one statement both the flipped
-    /// re-statement and a ranged extrude's start plane are made of.
+    /// **This world plane, at this origin** — a ranged extrude's start plane.
     ///
     /// The origin is why this exists as its own sentence. A ranged extrude does **not** move a
     /// solid afterwards; it states the sketch's plane where the range *starts* and sweeps the
@@ -689,14 +628,12 @@ impl Builder {
         step: usize,
         wp: WorldPlane,
         origin: [f64; 3],
-        flipped: bool,
     ) -> Result<SketchFrame, KitError> {
         let (u, v) = match wp {
             WorldPlane::XY => ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
             WorldPlane::YZ => ([0.0, 1.0, 0.0], [0.0, 0.0, 1.0]),
             WorldPlane::ZX => ([0.0, 0.0, 1.0], [1.0, 0.0, 0.0]),
         };
-        let v = if flipped { [-v[0], -v[1], -v[2]] } else { v };
         let sp = SketchPlane::from_axes(
             Point3::from_array(origin),
             Vector3::from_array(u),
@@ -714,31 +651,6 @@ impl Builder {
             WorldPlane::ZX => o[1] += d,
         }
         o
-    }
-
-    /// A statement of the same plane with the opposite frame — where the statement's
-    /// shape allows one. A `Points` plane's opposite frame is the **user's** statement
-    /// to make: the opposite frame's axes are canonically derived, not the statement's,
-    /// so no footprint mapping is the kit's to invent (the order of the points is the
-    /// direction).
-    fn flipped_frame(&mut self, step: usize, src: &PlaneSrc) -> Result<SketchFrame, KitError> {
-        match src {
-            PlaneSrc::WorldAxes { base, origin } => self.flipped_world_frame(step, *base, *origin),
-            PlaneSrc::Points { .. } => Err(KitError::Program {
-                step,
-                what: "extruding backwards off a three-point plane is not supported — \
-                       state the plane with xPoint and yHint swapped and extrude along \
-                       its normal"
-                    .into(),
-            }),
-            PlaneSrc::Through { .. } => Err(KitError::Program {
-                step,
-                what: "extruding backwards off a through-plane is not supported — \
-                       state the plane with the opposite vertex order (swap two of the \
-                       three) and extrude along its normal"
-                    .into(),
-            }),
-        }
     }
 
     /// A cuboid by the extrude road: the profile's corners are computed in rationals
@@ -929,7 +841,7 @@ impl Builder {
             center: [centre[iu], centre[iv]],
             size: crate::step::CircleSize::Radius(radius),
         };
-        let mut profiles = classify(step, &[circle], false)?;
+        let mut profiles = classify(step, &[circle])?;
         let Some(profile) = profiles.pop().filter(|_| profiles.is_empty()) else {
             return Err(KitError::Internal {
                 step,
@@ -1018,9 +930,8 @@ impl Builder {
             // what the surface is, and the two statements met as a coincident pair the kernel
             // refuses. So a filleted profile could not be extruded across its own plane at all.
             //
-            // One sweep, from a plane stated at the range's start. No fuse, no flipped frame, no
-            // mirrored rings — and no motion on the result, which a "sweep then translate" would
-            // have left behind.
+            // One sweep, from a plane stated at the range's start. No fuse — and no motion on the
+            // result, which a "sweep then translate" would have left behind.
             Dist::Both(lo, hi) => {
                 // NaN is not ordered either, and this spelling says so — the same door
                 // `pad_pocket` uses for its own positive-depth demand.
@@ -1054,8 +965,8 @@ impl Builder {
             });
         }
         let sv = self.sketch_of(step, sketch)?;
-        let (frame, mirrored) = self.extrude_frame(step, &sv.plane, dist > 0.0)?;
-        self.extrude_profiles(step, &sv, frame, mirrored, dist.abs())
+        let frame = self.extrude_frame(step, &sv.plane)?;
+        self.extrude_profiles(step, &sv, frame, dist)
     }
 
     /// **One sweep of `len`, from the sketch's plane stated `start` along its own normal** — what
@@ -1070,20 +981,17 @@ impl Builder {
     ) -> Result<Vec<Handle<Solid>>, KitError> {
         let sv = self.sketch_of(step, sketch)?;
         let frame = if start == 0.0 {
-            self.extrude_frame(step, &sv.plane, true)?.0
+            self.extrude_frame(step, &sv.plane)?
         } else {
             self.offset_frame(step, &sv.plane, start)?
         };
-        // The frame is the plane's own, never the flipped re-statement, so the rings are read as
-        // drawn.
-        self.extrude_profiles(step, &sv, frame, false, len)
+        self.extrude_profiles(step, &sv, frame, len)
     }
 
     /// The sketch's plane, restated `d` along its normal — the start plane of a ranged extrude.
     ///
-    /// A plane written as three points or three vertices declines, exactly as
-    /// [`Self::flipped_frame`] does and for the same reason: its parallel restatement's axes are
-    /// the **user's** to choose, not the kit's to invent.
+    /// A plane written as three points or three vertices declines: its parallel restatement's
+    /// axes are the **user's** to choose, not the kit's to invent.
     fn offset_frame(
         &mut self,
         step: usize,
@@ -1105,7 +1013,7 @@ impl Builder {
                 }
             },
         };
-        self.world_frame_at(step, base, Self::along_normal(origin, base, d), false)
+        self.world_frame_at(step, base, Self::along_normal(origin, base, d))
     }
 
     /// The sketch a value holds, cloned out of the value table.
@@ -1131,10 +1039,9 @@ impl Builder {
         step: usize,
         sv: &SketchValue,
         frame: SketchFrame,
-        mirrored: bool,
         dist: f64,
     ) -> Result<Vec<Handle<Solid>>, KitError> {
-        let profiles = classify(step, &sv.paths, mirrored)?;
+        let profiles = classify(step, &sv.paths)?;
         let mut bodies = Vec::with_capacity(profiles.len());
         for profile in profiles {
             let out = self.kapply(
@@ -1198,7 +1105,7 @@ impl Builder {
                 })?
                 .clone()
         };
-        let mut profiles = classify(step, &sv.paths, false)?;
+        let mut profiles = classify(step, &sv.paths)?;
         if profiles.len() != 1 {
             return Err(KitError::Program {
                 step,
@@ -1231,31 +1138,46 @@ impl Builder {
         let bodies = self.take(step, face.of)?;
         let target = face_at(&self.model, bodies[bi], si, fi);
 
-        let op = if pocket {
-            Operation::PocketOnFace {
-                face: target,
-                profile,
-                dist,
-            }
-        } else {
-            Operation::PadOnFace {
-                face: target,
-                profile,
-                dist,
-            }
+        // The face's own frame (outward), the tool swept off it — along that outward for a pad,
+        // against it, into the body, for a pocket — and the boolean with the face's body first.
+        // No blame: the sketch is read in the face's frame, so drawing the sketch value on its
+        // own plane would show it where the tool was not.
+        let frame = nacre::ops::face_sketch_frame(&self.model, target)
+            .map_err(|e| op_error(step, e, None))?;
+        let sweep = Operation::Extrude {
+            frame,
+            profile,
+            dist: if pocket { -dist } else { dist },
         };
-        let solid = match self.kapply(step, &op, None)? {
-            OpOutput::PadOnFace { solid, .. } | OpOutput::PocketOnFace { solid, .. } => solid,
+        let tool = match self.kapply(step, &sweep, None)? {
+            OpOutput::Extrude { solid, .. } => solid,
             other => {
                 return Err(KitError::Internal {
                     step,
-                    what: format!("{name} answered {other:?}"),
+                    what: format!("the {name}'s tool answered {other:?}"),
                 });
             }
         };
-        // Only the face's own body is superseded; the rest ride along unchanged.
+        let kind = if pocket {
+            BoolKind::Cut
+        } else {
+            BoolKind::Fuse
+        };
+        let pieces = self.kbool(step, kind, bodies[bi], tool, None)?;
+        // A fuse of two one-shell solids comes back in pieces only when they never touched —
+        // the footprint missed the face. The boolean answered right; the pad's premise broke.
+        if !pocket && pieces.len() > 1 {
+            return Err(KitError::Program {
+                step,
+                what: "the pad's outline does not meet the face — an outline hanging over the \
+                       edge still touches, this one misses it entirely"
+                    .into(),
+            });
+        }
+        // The face's body becomes every piece the boolean left — a pocket that severs it keeps
+        // both sides, one that reaches through everything leaves none; the rest ride along.
         let mut out = bodies;
-        out[bi] = solid;
+        out.splice(bi..=bi, pieces);
         self.model.rebuild_adjacency();
         Ok(SolidValue { bodies: out })
     }
@@ -1408,13 +1330,13 @@ impl Builder {
             if list.len() == 2 {
                 // No third party: whatever comes out *is* the value — merged, or the
                 // kernel's proof that the two pieces stand apart. No identity needed.
-                let r = self.kbool(step, BoolKind::Fuse, list[0].h, list[1].h, blame)?;
+                let r = self.kbool(step, BoolKind::Fuse, list[0].h, list[1].h, Some(blame))?;
                 return Ok(r);
             }
             // Guard copies keep exact identities for the disjoint verdict.
             let ca = self.kcopy(step, list[i].h)?;
             let cb = self.kcopy(step, list[j].h)?;
-            let r = self.kbool(step, BoolKind::Fuse, list[i].h, list[j].h, blame)?;
+            let r = self.kbool(step, BoolKind::Fuse, list[i].h, list[j].h, Some(blame))?;
             match r.len() {
                 1 => {
                     // Merged: one new piece with a fresh identity; the guards are
@@ -1474,7 +1396,7 @@ impl Builder {
                         b: tid,
                         detail: format!("intermediate {pi} vs body {bi}"),
                     };
-                    next.extend(self.kbool(step, BoolKind::Cut, p, t_use, blame)?);
+                    next.extend(self.kbool(step, BoolKind::Cut, p, t_use, Some(blame))?);
                 }
                 pieces = next;
             }
@@ -1512,7 +1434,7 @@ impl Builder {
                         b: bid,
                         detail: format!("intermediate {ai} vs body {bi}"),
                     };
-                    out.extend(self.kbool(step, BoolKind::Common, a_use, b_use, blame)?);
+                    out.extend(self.kbool(step, BoolKind::Common, a_use, b_use, Some(blame))?);
                 }
             }
             acc = out;
@@ -1553,6 +1475,40 @@ fn world_plane(wp: WorldPlane) -> SketchPlane {
         WorldPlane::XY => SketchPlane::world_xy(),
         WorldPlane::YZ => SketchPlane::world_yz(),
         WorldPlane::ZX => SketchPlane::world_zx(),
+    }
+}
+
+/// A kernel operation's error, as an author meets it. `SolidNotLive` is *never* a user error
+/// — the value layer exists to make it unreachable — so it comes back as
+/// [`KitError::Internal`].
+fn op_error(step: usize, e: OpError, blame: Option<Blame>) -> KitError {
+    match e {
+        OpError::SolidNotLive => KitError::Internal {
+            step,
+            what: "a consumed solid was used again (the automatic-copy scan missed it)".to_string(),
+        },
+        // A boolean rejection carries the kernel's classification; an operation-level
+        // error still carries none — that taxonomy is a later step, and it is a
+        // separate question from the words below (a sketch aimed at a curved face is the
+        // operation's premise breaking, which none of the three classes describes).
+        OpError::Boolean(nacre::ops::BoolError::Rejected { reason, at }) => KitError::Kernel {
+            step,
+            what: reason.to_string(),
+            class: Some(reason.class()),
+            blame,
+            mark: at.map(Mark::from),
+        },
+        // Everything else is an operation-level refusal. `op_words` decides what an
+        // author is told — a sentence, never the bare Rust variant name (a reader
+        // meeting `NonPlanarFace` alone learns little). The words live in that table, so no
+        // variant needs an arm of its own here just to carry them.
+        other => KitError::Kernel {
+            step,
+            what: crate::error::op_words(&other),
+            class: None,
+            blame,
+            mark: None,
+        },
     }
 }
 

@@ -196,8 +196,8 @@ pub enum Path {
 }
 
 /// How far an extrude goes. `One(d)`: `d` along the stated normal (`d < 0` goes the
-/// other way — the flipped re-statement road). `Both(lo, hi)` with `lo < 0 < hi`:
-/// both ways at once, straddling the plane — one body per island, fused across it.
+/// other way, in the same frame). `Both(lo, hi)` with `lo < hi`: the range along the
+/// normal — one sweep per island, from the plane re-stated where the range starts.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Dist {
     One(f64),
@@ -334,14 +334,16 @@ pub enum Step {
     /// world origin projected onto the face's plane, so on an axis-aligned face the
     /// sketch coordinates are in-plane world coordinates (draw near `f.center`; the
     /// sketch's `plane` field is not consulted here) — extruded
-    /// `dist` outward and fused on. Consumes `face.of`. Single-island sketches only.
+    /// `dist` outward and fused on. An outline that misses the face entirely is refused.
+    /// Consumes `face.of`. Single-island sketches only.
     Pad {
         face: FaceRef,
         sketch: ValueId,
         dist: f64,
     },
-    /// Carve a blind pocket — [`Step::Pad`]'s cut twin: same face frame, depth `dist`
-    /// inward; punching through rejects (the kernel's not-blind check).
+    /// Carve a pocket — [`Step::Pad`]'s cut twin: same face frame, the tool swept `dist`
+    /// inward and cut away. Deeper than the body cuts through; a cut that severs the body
+    /// leaves every piece in the value.
     Pocket {
         face: FaceRef,
         sketch: ValueId,

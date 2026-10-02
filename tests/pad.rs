@@ -94,10 +94,11 @@ fn a_pad_adds_a_boss_on_the_face() {
     );
 }
 
-/// ② A pocket removes its volume; carving deeper than the body is not blind and
-/// rejects with the kernel's own name.
+/// ② A pocket removes its volume; one deeper than the body cuts through, the way a blind cut
+/// past the far side does in any CAD — the depth is how far the tool goes, not a promise of a
+/// floor.
 #[test]
-fn a_pocket_carves_and_stays_blind() {
+fn a_pocket_carves_and_a_deep_one_cuts_through() {
     let prefix = vec![box_4x4x2()];
     let out = build(&prefix, None).expect("build");
     let face = top(&out, 0, |_| true);
@@ -116,7 +117,8 @@ fn a_pocket_carves_and_stays_blind() {
         "32 − 1"
     );
 
-    let msg = err_of(vec![
+    // Three deep in a plate two thick: the obvious first try at a hole is a hole.
+    let steps = vec![
         box_4x4x2(),
         unit_square(),
         Step::Pocket {
@@ -124,14 +126,11 @@ fn a_pocket_carves_and_stays_blind() {
             sketch: ValueId(1),
             dist: 3.0,
         },
-    ]);
-    // A sentence **and** the identifier, never the name alone — and this is the refusal an
-    // author meets first: a pocket as deep as the plate is the obvious way to try to make a hole.
-    assert!(msg.contains("has to stop inside the material"), "{msg}");
-    assert!(
-        msg.contains("[PocketNotBlind]"),
-        "the handle to search with: {msg}"
-    );
+    ];
+    let out = build(&steps, None).expect("a through-pocket builds");
+    let v = solid_at(&out, 2);
+    assert_eq!(v.bodies.len(), 1);
+    assert!((v.volume(&out.model) - 30.0).abs() < 1e-9, "32 − 1×1×2");
 }
 
 /// ⑤ A footprint that never reaches the face, and a face that is not flat — two premises
@@ -167,11 +166,9 @@ fn a_pad_says_why_its_premise_broke() {
             dist: 1.0,
         },
     ]);
+    // The kit's own premise now (a fuse that comes back in pieces), so a sentence with no
+    // kernel identifier behind it.
     assert!(msg.contains("does not meet the face"), "{msg}");
-    assert!(
-        msg.contains("[PadMissesFace]"),
-        "the handle to search with: {msg}"
-    );
 }
 
 /// …and the same for a face that carries no sketch frame.
@@ -437,4 +434,59 @@ fn pad_rejections_are_honest() {
         ]);
         assert!(msg.contains("positive depth"), "{msg}");
     }
+}
+
+/// ⑦ A pocket that severs its body keeps every piece. A tower `2×2×3` with an arm `4×2×1`
+/// bridging out at the top: a trench across the joined top, `1.5` deep, leaves a floor inside
+/// the tower and cuts the arm clean through — so the far end of the arm falls away as a body of
+/// its own. Both sides stay in the value: tower `12 − 1·2·1.5 = 9`, arm end `3·2·1 = 6`.
+#[test]
+fn a_pocket_that_severs_its_body_keeps_every_piece() {
+    let prefix = vec![
+        Step::Cuboid {
+            size: [2.0, 2.0, 3.0],
+            at: Anchor::Corner([0.0, 0.0, 0.0]),
+        },
+        Step::Cuboid {
+            size: [4.0, 2.0, 1.0],
+            at: Anchor::Corner([2.0, 0.0, 2.0]),
+        },
+        Step::Boolean {
+            kind: KitBool::Fuse,
+            args: vec![ValueId(0), ValueId(1)],
+        },
+    ];
+    let out = build(&prefix, None).expect("the tower and arm");
+    let face = top(&out, 2, |f| f.center[2] == 3.0);
+    let mut steps = prefix;
+    steps.push(Step::Sketch {
+        plane: PlaneRef::World(WorldPlane::XY),
+        paths: vec![Path::Pen(PenPath {
+            start: [1.0, -1.0],
+            segs: vec![
+                line_to([3.0, -1.0]),
+                line_to([3.0, 3.0]),
+                line_to([1.0, 3.0]),
+            ],
+            close_corner: None,
+        })],
+    });
+    steps.push(Step::Pocket {
+        face,
+        sketch: ValueId(3),
+        dist: 1.5,
+    });
+    let out = build(&steps, None).expect("build");
+    let v = solid_at(&out, 4);
+    let mut vols: Vec<f64> = v
+        .bodies
+        .iter()
+        .map(|&b| nacre_kit::SolidValue { bodies: vec![b] }.volume(&out.model))
+        .collect();
+    vols.sort_by(f64::total_cmp);
+    assert_eq!(vols.len(), 2, "both sides of the cut: {vols:?}");
+    assert!(
+        (vols[0] - 6.0).abs() < 1e-9 && (vols[1] - 9.0).abs() < 1e-9,
+        "{vols:?}"
+    );
 }
