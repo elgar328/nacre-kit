@@ -1,0 +1,40 @@
+[package]
+name = "nacre-kit"
+version = "0.0.1-dev"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/elgar328/nacre-kit"
+description = "Convenience layer over the nacre CAD kernel: reusable values, n-ary booleans and sketch helpers, built from kernel operations"
+
+[dependencies]
+# The kernel facade — one line, per its own README. `test-util` is deliberately NOT
+# enabled: its doors plant models the operations cannot build, which a production layer must
+# never do. Everything here goes through `Operation`s.
+nacre = { path = "../nacre/crates/nacre", default-features = false }
+# The Step log is what a front end records as JSON — kit-local vocabulary types derive
+# these (kernel types deliberately do not carry serde).
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# A transitive dep (astro-float → rand → getrandom 0.2) refuses to build for
+# wasm32-unknown-unknown without its browser backend (`js` feature).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { version = "0.2", features = ["js"] }
+
+[features]
+# The kernel's rayon parallelism, on by default for native use. A wasm consumer takes
+# `default-features = false` — the serial, rayon-free build the kernel documents.
+default = ["parallel"]
+parallel = ["nacre/parallel"]
+
+# The kernel's own `Cargo.toml` carries the same two lines and the measurement behind them: this
+# crate's tests are the same exact arithmetic, and at `opt-level = 0` they pay the same ninefold.
+# `debug = 1` keeps a panic's file and line while dropping most of the artifact size.
+[profile.dev]
+opt-level = 2
+debug = 1
+
+[profile.test]
+opt-level = 2
+debug = 1
