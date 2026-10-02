@@ -269,7 +269,7 @@ dependencies = [
 
 [[package]]
 name = "nacre-kit"
-version = "0.0.1"
+version = "0.0.2-dev"
 dependencies = [
  "getrandom",
  "nacre",
