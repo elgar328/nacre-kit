@@ -1,6 +1,6 @@
 [package]
 name = "nacre-kit"
-version = "0.0.1-dev"
+version = "0.0.1"
 edition = "2024"
 rust-version = "1.85"
 license = "MIT OR Apache-2.0"
@@ -11,7 +11,7 @@ description = "Convenience layer over the nacre CAD kernel: reusable values, n-a
 # The kernel facade — one line, per its own README. `test-util` is deliberately NOT
 # enabled: its doors plant models the operations cannot build, which a production layer must
 # never do. Everything here goes through `Operation`s.
-nacre = { path = "../nacre/crates/nacre", default-features = false }
+nacre = { path = "../nacre/crates/nacre", version = "0.0.1", default-features = false }
 # The Step log is what a front end records as JSON — kit-local vocabulary types derive
 # these (kernel types deliberately do not carry serde).
 serde = { version = "1", features = ["derive"] }
