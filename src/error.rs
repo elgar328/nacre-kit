@@ -194,6 +194,7 @@ pub(crate) fn op_words(e: &OpError) -> String {
         | OpError::ProfileUndecidable
         | OpError::ArcSweepNotQuarterTurn
         | OpError::NonPositiveDistance
+        | OpError::ZeroDistance
         | OpError::PlaneWithoutExactForm
         | OpError::FrameOutsideDecimalWindow
         | OpError::OriginNotOnPlane
