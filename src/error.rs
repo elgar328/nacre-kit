@@ -256,7 +256,7 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
             "the cylinder's side is divided along its length in a way that is not built yet"
         }
         "arc_bound_not_yet" => {
-            "a boundary on the cylinder's side — around its seam or along a rim — is not built yet"
+            "a boundary on the cylinder's side — a rim cut at a single point, or a side that winds round other than between two rims — is not built yet"
         }
         "no_clear_ray" => {
             "inside-or-outside could not be decided — every probe ray from the region's corners grazes a boundary"

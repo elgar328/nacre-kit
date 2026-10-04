@@ -287,7 +287,7 @@ fn every_reason_sentence_is_pinned() {
         (
             "arc_bound_not_yet",
             RejectClass::NotSupported,
-            "the kernel does not build this — a boundary on the cylinder's side — around its seam or along a rim — is not built yet [arc_bound_not_yet]",
+            "the kernel does not build this — a boundary on the cylinder's side — a rim cut at a single point, or a side that winds round other than between two rims — is not built yet [arc_bound_not_yet]",
         ),
         (
             "no_clear_ray",
