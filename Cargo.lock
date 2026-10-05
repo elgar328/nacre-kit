@@ -275,6 +275,7 @@ dependencies = [
  "nacre",
  "serde",
  "serde_json",
+ "step-io",
 ]
 
 [[package]]
@@ -334,6 +335,7 @@ dependencies = [
  "nacre-geom",
  "nacre-math",
  "nacre-predicates",
+ "nacre-props",
  "nacre-store",
  "nacre-topo",
 ]

@@ -20,9 +20,12 @@
 //! - [`BuildOutput`] — the kernel model, the value table, and what should be rendered.
 //! - [`KitError`] — kernel rejections translated to where-and-why, with pair-level
 //!   blame for n-ary booleans.
+//! - [`BuildOutput::export_step`] and [`BuildOutput::rendered_bodies`] — files out of a build:
+//!   what is shown is what is written.
 
 mod build;
 mod error;
+mod export;
 mod query;
 mod render;
 mod sketch;
@@ -31,6 +34,7 @@ mod value;
 
 pub use build::{BuildOutput, StepReport, build};
 pub use error::{Blame, KitError, Mark, RejectClass};
+pub use export::StepExport;
 pub use query::{FaceInfo, VertexInfo};
 pub use step::{
     Anchor, CircleSize, Corner, CylAnchor, Dist, EdgeStyle, Edges, FaceRef, KitAxis, KitBool,
