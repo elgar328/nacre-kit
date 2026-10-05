@@ -67,7 +67,7 @@ fn the_step_file_holds_the_shown_bodies_only() {
 /// ★★ **The export door raises what a long history left at its construction figure.** A box turned
 /// 7° and carried 300 recorded translations is past what the caches pay for at build time (the
 /// kernel's `translated_chain(300)`, said in steps), so its caches stand at the producer's
-/// figures; the door raises them, and leaves nothing behind.
+/// figures; the door raises the shown box's, and leaves nothing behind.
 #[test]
 fn the_export_door_raises_a_long_history() {
     let mut steps = vec![
@@ -96,6 +96,9 @@ fn the_export_door_raises_a_long_history() {
         + r.edges.left_undecided
         + r.edges.left_unrealized;
     assert!(raised > 0, "the door raised nothing: {r:?}");
+    // Every intermediate is live (301 hidden boxes): the door pays for the shown box's 8 corners
+    // and no other's.
+    assert_eq!(r.vertices.refined, 8, "{r:?}");
     assert_eq!(left, 0, "{r:?}");
     assert_eq!(solids_in(&file.text), 1);
 }

@@ -1,11 +1,12 @@
 //! Files out of a build — **what is shown is what is written.**
 //!
-//! A build's model holds more live solids than it draws: a copy made before a consumption, a value
-//! no later step reads but the display set leaves out. Writing the model whole would put those in
-//! the file (in 61 of this crate's 140 test builds the model held more solids than were drawn), so
+//! A build's model holds more live solids than it draws: every consumption copies first and leaves
+//! the copy as the value's binding (`Builder::take` — the prefix-stable scheme), so every
+//! intermediate value of a script stays live, and a value the display set leaves out stays too.
+//! Writing — or paying for — the model whole would cover all of those, so
 //! [`BuildOutput::rendered_bodies`] names the bodies once, and every format writes those:
-//! [`BuildOutput::export_step`] here, and an OBJ through `nacre::tess::Tessellation::to_obj_solids`
-//! from whoever holds the mesh.
+//! [`BuildOutput::export_step`] here, and an OBJ through `nacre::tess::tessellate_solids` from
+//! whoever builds the mesh.
 //!
 //! "STEP" in this module is the file format (ISO 10303), never a program [`Step`](crate::Step).
 
@@ -41,15 +42,17 @@ impl BuildOutput {
     /// one part each, with `timestamp` written verbatim into the header (the kernel reads no
     /// clock; `""` leaves the field blank).
     ///
-    /// First pays `nacre::ops::refine_caches`, the kernel's door before an export: a history longer
-    /// than the caches pay for at build time leaves construction figures behind, and the door
-    /// raises them to the nearest `f64` of the exact geometry. It takes the model mutably, and its
+    /// First pays `nacre::ops::refine_caches_of` over those bodies, the kernel's door before an
+    /// export: a history longer than the caches pay for at build time leaves construction figures
+    /// behind, and the door raises them to the nearest `f64` of the exact geometry — for what is
+    /// written only (a box moved 300 times keeps 302 live solids and shows one). It takes the model mutably, and its
     /// own rule is to call it on a copy when the model will be edited further — a build's output is
     /// the end of its log, so nothing is built on it afterwards. A raised cache is a closer `f64`
     /// of the same truth; the queries that read caches answer with it from then on.
     pub fn export_step(&mut self, timestamp: &str) -> Result<StepExport, StepError> {
-        let refine = nacre::ops::refine_caches(&mut self.model);
-        let text = nacre::step::to_step_solids(&self.model, &self.rendered_bodies(), timestamp)?;
+        let bodies = self.rendered_bodies();
+        let refine = nacre::ops::refine_caches_of(&mut self.model, &bodies);
+        let text = nacre::step::to_step_solids(&self.model, &bodies, timestamp)?;
         Ok(StepExport { text, refine })
     }
 }
