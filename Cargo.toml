@@ -41,6 +41,6 @@ debug = 1
 
 [dev-dependencies]
 # Reads an exported STEP file back to count its solids (a text count would take a hollow body's
-# `BREP_WITH_VOIDS` for a second `MANIFOLD_SOLID_BREP`). A range, so it resolves to the kernel's
-# own step-io and follows it.
+# `BREP_WITH_VOIDS` for a second `MANIFOLD_SOLID_BREP`). The kernel writes with brep-to-step, so
+# this reader shares no code with the writer it checks.
 step-io = "0.2"

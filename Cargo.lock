@@ -52,6 +52,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2032f911046de80f0a198e0901378627c33f59ea0ac00e363d481118bd70a53"
 
 [[package]]
+name = "brep-to-step"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2bd38438fcb225d004cd5fb141193a8be2b9147061da6929e096f0196877c598"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -317,11 +323,11 @@ dependencies = [
 name = "nacre-step"
 version = "0.0.2-dev"
 dependencies = [
+ "brep-to-step",
  "nacre-geom",
  "nacre-math",
  "nacre-store",
  "nacre-topo",
- "step-io",
 ]
 
 [[package]]
