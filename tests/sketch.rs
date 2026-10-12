@@ -46,7 +46,7 @@ fn err_of(steps: Vec<Step>) -> String {
     }
 }
 
-/// ② Holes and islands, undeclared: three nested squares — material, hole, island —
+/// Holes and islands, undeclared: three nested squares — material, hole, island —
 /// classified by the kernel's containment court. Islands become separate bodies.
 #[test]
 fn holes_and_islands_come_from_nesting() {
@@ -77,7 +77,7 @@ fn holes_and_islands_come_from_nesting() {
     );
 }
 
-/// ④ The court's verdicts arrive with coordinates, in words.
+/// The court's verdicts arrive with coordinates, in words.
 #[test]
 fn rejections_carry_positions() {
     // A bowtie: the path crosses itself.
@@ -109,7 +109,7 @@ fn rejections_carry_positions() {
     assert!(meet.contains("touch or cross"), "{meet}");
 }
 
-/// ⑤ Chamfers: declared at the corner, computed by the kit against the sharp ring.
+/// Chamfers: declared at the corner, computed by the kit against the sharp ring.
 /// A 45° cut removes exactly d²/2 per corner — and on axis-aligned edges the retreat
 /// is rational, so the volume is exact.
 #[test]
@@ -144,7 +144,7 @@ fn chamfers_cut_the_corners() {
     );
 }
 
-/// ⑤ The chamfer rejections say which corner and how much.
+/// The chamfer rejections say which corner and how much.
 #[test]
 fn chamfer_rejections_name_the_corner() {
     // Too big for its edge.
@@ -201,7 +201,7 @@ fn chamfer_rejections_name_the_corner() {
     assert!(straight.contains("straight"), "{straight}");
 }
 
-/// ⑥ What the vocabulary cannot state exactly is refused in words, and ambiguous pen
+/// What the vocabulary cannot state exactly is refused in words, and ambiguous pen
 /// input is refused. A fillet off a right angle, an arc off the quarter grid; a repeated
 /// point, an empty sketch. A `lineTo` back to the start is **not** ambiguous:
 /// `close()` draws nothing when the pen is already home.
@@ -270,7 +270,7 @@ fn inexact_and_ambiguous_input_is_refused() {
     assert!(empty.contains("empty sketch"), "{empty}");
 }
 
-/// ⑦ A sketch is pure data: extruding it twice consumes nothing and copies nothing.
+/// A sketch is pure data: extruding it twice consumes nothing and copies nothing.
 #[test]
 fn a_sketch_is_reused_without_copies() {
     let steps = vec![

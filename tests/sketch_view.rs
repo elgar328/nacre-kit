@@ -28,14 +28,14 @@ fn sketch_on(plane: PlaneRef) -> Step {
     }
 }
 
-/// ① A sketch nobody has used yet is a result: it is drawn.
+/// A sketch nobody has used yet is a result: it is drawn.
 #[test]
 fn an_unused_sketch_is_drawn() {
     let out = build(&[sketch_on(PlaneRef::World(WorldPlane::XY))], None).expect("build");
     assert_eq!(out.rendered, vec![ValueId(0)]);
 }
 
-/// ② Extruding hands the screen to the solid — and note this cannot be "was it
+/// Extruding hands the screen to the solid — and note this cannot be "was it
 /// consumed", because an extrude does not consume its sketch (they are pure data,
 /// reused freely). The question is whether anything was made out of it.
 #[test]
@@ -50,13 +50,13 @@ fn extruding_a_sketch_takes_the_screen_from_it() {
     let out = build(&steps, None).expect("build");
     assert_eq!(out.rendered, vec![ValueId(1)], "the solid, not the sketch");
 
-    // ③ Cut the same program before the extrude and the sketch is what there is —
+    // Cut the same program before the extrude and the sketch is what there is —
     // stepping through a script shows the sketch, then what became of it.
     let out = build(&steps, Some(1)).expect("prefix build");
     assert_eq!(out.rendered, vec![ValueId(0)]);
 }
 
-/// ④ Where the lines are: on the plane the sketch was drawn on. Measured against the
+/// Where the lines are: on the plane the sketch was drawn on. Measured against the
 /// plane rather than against expected numbers — for a plane through three named
 /// vertices the axes are the kernel's to choose, and predicting them from the
 /// vertices' coordinates is the mistake `through` exists to prevent.
@@ -115,7 +115,7 @@ fn a_sketch_is_drawn_on_its_own_plane() {
     assert!((sides[0] - 3.0).abs() < 1e-9 && (sides[3] - 4.0).abs() < 1e-9);
 }
 
-/// ⑤ Chamfers are already resolved in what comes back: what you see is what will be
+/// Chamfers are already resolved in what comes back: what you see is what will be
 /// extruded.
 #[test]
 fn the_lines_are_the_ring_that_will_be_extruded() {
@@ -150,7 +150,7 @@ fn the_lines_are_the_ring_that_will_be_extruded() {
     );
 }
 
-/// ⑥ Only sketches have sketch lines.
+/// Only sketches have sketch lines.
 #[test]
 fn other_values_have_no_sketch_lines() {
     let steps = vec![Step::Cuboid {

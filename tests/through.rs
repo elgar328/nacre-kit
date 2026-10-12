@@ -55,7 +55,7 @@ fn pick(out: &nacre_kit::BuildOutput, of: u32, at: [f64; 3]) -> VertexRef {
     }
 }
 
-/// ① The plane through three cube corners carries a sketch, and the prism's volume is
+/// The plane through three cube corners carries a sketch, and the prism's volume is
 /// area × dist regardless of the plane's tilt.
 #[test]
 fn a_through_plane_carries_a_sketch() {
@@ -86,7 +86,7 @@ fn a_through_plane_carries_a_sketch() {
     );
 }
 
-/// ② The order **is** the direction: the same three corners in swapped order are the
+/// The order **is** the direction: the same three corners in swapped order are the
 /// same interned surface (one handle) with the opposite frame — the two prisms leave
 /// the plane on opposite sides.
 #[test]
@@ -139,7 +139,7 @@ fn vertex_order_is_the_normal() {
     assert!(side(6) < 0.0, "swapped order returns toward the origin");
 }
 
-/// ③ The reason a plane through vertices exists: on a **rotated** solid the corners' report coordinates
+/// The reason a plane through vertices exists: on a **rotated** solid the corners' report coordinates
 /// are rounded, so a plane through the *coordinates* would be subtly wrong — the
 /// plane through the *names* is exact. Rotation about Z keeps the top plane z = 1,
 /// and the through-plane lands on it exactly (asserted to 1e-12); a boss extruded
@@ -239,7 +239,7 @@ fn named_vertices_beat_rounded_coordinates() {
     );
 }
 
-/// ④ Degenerate and foreign statements reject honestly: a repeated vertex, a vertex
+/// Degenerate and foreign statements reject honestly: a repeated vertex, a vertex
 /// of some other solid, backward extrudes.
 #[test]
 fn through_rejections_are_honest() {
@@ -284,7 +284,7 @@ fn through_rejections_are_honest() {
     assert!(msg.contains("not a vertex of value 1"), "{msg}");
 }
 
-/// ②b A backward extrude off a through-plane sweeps against its normal in the same frame: the
+/// A backward extrude off a through-plane sweeps against its normal in the same frame: the
 /// forward and backward prisms meet only on their base, so their fusion holds both.
 #[test]
 fn a_through_plane_extrudes_backward_too() {

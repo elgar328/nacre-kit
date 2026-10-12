@@ -60,8 +60,8 @@ fn err_of(steps: Vec<Step>) -> String {
     }
 }
 
-/// ① A boss padded on the top face adds its volume, and rides exactly on the face's
-/// plane; ⑥ a re-query sees the boss's new faces.
+/// A boss padded on the top face adds its volume, and rides exactly on the face's
+/// plane; a re-query sees the boss's new faces.
 #[test]
 fn a_pad_adds_a_boss_on_the_face() {
     let prefix = vec![box_4x4x2()];
@@ -84,7 +84,7 @@ fn a_pad_adds_a_boss_on_the_face() {
         (hi.as_array()[2] - 3.0).abs() < 1e-12 && lo.as_array()[2] == 0.0,
         "the boss rises from z = 2 to 3"
     );
-    // ⑥ The query reflects the padded solid: more faces than a box, and the boss top.
+    // The query reflects the padded solid: more faces than a box, and the boss top.
     let fs = out.faces_of(ValueId(2)).expect("faces");
     assert!(fs.len() > 6, "the boss's faces joined the list");
     assert!(
@@ -94,7 +94,7 @@ fn a_pad_adds_a_boss_on_the_face() {
     );
 }
 
-/// ② A pocket removes its volume; one deeper than the body cuts through, the way a blind cut
+/// A pocket removes its volume; one deeper than the body cuts through, the way a blind cut
 /// past the far side does in any CAD — the depth is how far the tool goes, not a promise of a
 /// floor.
 #[test]
@@ -133,7 +133,7 @@ fn a_pocket_carves_and_a_deep_one_cuts_through() {
     assert!((v.volume(&out.model) - 30.0).abs() < 1e-9, "32 − 1×1×2");
 }
 
-/// ⑤ A footprint that never reaches the face, and a face that is not flat — two premises
+/// A footprint that never reaches the face, and a face that is not flat — two premises
 /// of the operation breaking, said in words rather than named.
 ///
 /// These are ordinary mistakes: a sketch drawn in the wrong place, and a boss asked for
@@ -207,7 +207,7 @@ fn a_pad_on_a_curved_face_says_what_a_face_has_to_be() {
     );
 }
 
-/// ④ Multi-island sketches are one-per-pad, honestly.
+/// Multi-island sketches are one-per-pad, honestly.
 #[test]
 fn one_island_per_pad() {
     let prefix = vec![box_4x4x2()];
@@ -249,7 +249,7 @@ fn one_island_per_pad() {
     assert!(msg.contains("has 2"), "{msg}");
 }
 
-/// ⑤ On a multi-body value the pad supersedes only the face's own body; the other
+/// On a multi-body value the pad supersedes only the face's own body; the other
 /// rides along unchanged. The profile speaks the face's **plane frame** (canonical —
 /// for an axis-aligned face, world coordinates in-plane), so the far body's boss is
 /// drawn at the far body's coordinates.
@@ -318,7 +318,7 @@ fn a_pad_touches_only_its_body() {
     assert!((vols[1] - 9.0).abs() < 1e-9, "padded body, got {}", vols[1]);
 }
 
-/// ⑦ A pad whose value is consumed again later: the automatic copy steps in, and the
+/// A pad whose value is consumed again later: the automatic copy steps in, and the
 /// positional remap keeps the reference on the right face — the boss lands where the
 /// query saw the face, and the later consumer gets the unpadded shape.
 #[test]
@@ -355,7 +355,7 @@ fn a_pad_survives_the_automatic_copy() {
     assert!((lo.as_array()[2] - 10.0).abs() < 1e-12, "and translated");
 }
 
-/// ⑧ Two pads on one value both work — value semantics: each result is the original
+/// Two pads on one value both work — value semantics: each result is the original
 /// shape plus its own boss. The second pad receives a copy, and the remap carries the
 /// production-time face index onto it.
 #[test]
@@ -391,7 +391,7 @@ fn two_pads_on_one_value() {
     }
 }
 
-/// ⑨⑩ Foreign references and degenerate depths are program errors.
+/// Foreign references and degenerate depths are program errors.
 #[test]
 fn pad_rejections_are_honest() {
     let two_solids = vec![
@@ -436,7 +436,7 @@ fn pad_rejections_are_honest() {
     }
 }
 
-/// ⑦ A pocket that severs its body keeps every piece. A tower `2×2×3` with an arm `4×2×1`
+/// A pocket that severs its body keeps every piece. A tower `2×2×3` with an arm `4×2×1`
 /// bridging out at the top: a trench across the joined top, `1.5` deep, leaves a floor inside
 /// the tower and cuts the arm clean through — so the far end of the arm falls away as a body of
 /// its own. Both sides stay in the value: tower `12 − 1·2·1.5 = 9`, arm end `3·2·1 = 6`.

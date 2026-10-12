@@ -38,7 +38,7 @@ fn box_4x4x2() -> Step {
     }
 }
 
-/// ① The counterexample that killed the lookahead scan, face edition: a reference
+/// The counterexample that killed the lookahead scan, face edition: a reference
 /// picked against a prefix survives a *later* re-consumption of an upstream value.
 /// Under the old scheme the last line moved a copy to before value 1's production,
 /// shifting its cell indices out from under the recorded reference.
@@ -96,7 +96,7 @@ fn a_reference_survives_a_later_upstream_reuse() {
     assert!((moved.volume(&out.model) - 32.0).abs() < 1e-9, "unpadded");
 }
 
-/// ① The same counterexample, vertex edition: a `through` plane over production
+/// The same counterexample, vertex edition: a `through` plane over production
 /// vertices survives the value's consumption (the membership check walks every
 /// generation, not just the current binding).
 #[test]
@@ -163,7 +163,7 @@ fn unit_square_on(plane: PlaneRef) -> Step {
     }
 }
 
-/// ② The theorem itself, measured on the arena: cut the same script at q₁ < q₂ and
+/// The theorem itself, measured on the arena: cut the same script at q₁ < q₂ and
 /// the shorter build's cell stores are a **literal prefix** of the longer's — every
 /// cell equal, embedded handles included. (Comparing *query outputs* across different
 /// cut points would measure the wrong proposition: a query reports the value's

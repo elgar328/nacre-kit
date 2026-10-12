@@ -125,8 +125,8 @@ fn a_copy_of_nothing_is_still_caught() {
 /// The report surface: boolean steps carry a step-level aggregate; on an axis-aligned
 /// model **nothing is assumed** — zero merges, zero coincidences, no closest call.
 /// (That is the negative direction only: a fixture whose report is *nonempty* needs
-/// rotated coplanar contact, which K1's vocabulary cannot state yet — an honest gap
-/// for K2/K3, not a covered case.)
+/// rotated coplanar contact, which this file does not build — a gap, not a covered
+/// case.)
 #[test]
 fn axis_aligned_booleans_assume_nothing() {
     let out = build(

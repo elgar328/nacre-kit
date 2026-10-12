@@ -34,7 +34,7 @@ fn bodies(out: &nacre_kit::BuildOutput, i: u32) -> usize {
         .body_count()
 }
 
-/// ① Free reuse: the same value feeds two consumers and the user never says copy.
+/// Free reuse: the same value feeds two consumers and the user never says copy.
 /// The kernel's consuming semantics stay invisible.
 #[test]
 fn a_value_is_freely_reusable() {
@@ -58,7 +58,7 @@ fn a_value_is_freely_reusable() {
     );
 }
 
-/// ② The liveness invariant: however a program reuses values — across steps, twice in
+/// The liveness invariant: however a program reuses values — across steps, twice in
 /// one boolean, as a shared tool — the kernel's `SolidNotLive` never surfaces.
 /// (It would come back as `KitError::Internal`, and `build` succeeding at all is the
 /// assertion.)
@@ -98,7 +98,7 @@ fn no_liveness_error_ever_reaches_the_user() {
     }
 }
 
-/// ③ The fuse fold is a real union — transitive merging through a bridge, honest
+/// The fuse fold is a real union — transitive merging through a bridge, honest
 /// disjoint termination (the three-mutually-disjoint case is exactly where a naive
 /// mark scheme cycles forever), and the mixed case.
 #[test]
@@ -143,7 +143,7 @@ fn fuse_folds_to_a_true_union() {
     assert!((vol(&out, 3) - 4.0).abs() < 1e-9, "3 (merged) + 1 (apart)");
 }
 
-/// ③ (cut) — a cut that splits a piece keeps cutting the new pieces with the
+/// The cut fold: a cut that splits a piece keeps cutting the new pieces with the
 /// remaining tools.
 #[test]
 fn cut_keeps_cutting_what_it_severs() {
@@ -160,7 +160,7 @@ fn cut_keeps_cutting_what_it_severs() {
     assert!((vol(&out, 3) - 3.5).abs() < 1e-9, "5 − 1 − 0.5");
 }
 
-/// ③ (common) — the distributed pairwise intersection, and the empty result as a
+/// The common fold: the distributed pairwise intersection, and the empty result as a
 /// normal value.
 #[test]
 fn common_distributes_over_bodies() {
@@ -204,7 +204,7 @@ fn common_distributes_over_bodies() {
     assert!((vol(&out, 5) - 1.0).abs() < 1e-9);
 }
 
-/// ④ Pair blame: when the kernel refuses a combination, the error names which two
+/// Pair blame: when the kernel refuses a combination, the error names which two
 /// values.
 ///
 /// Two cubes sharing exactly an edge are not this case: nothing joins there, so the kernel
@@ -242,7 +242,7 @@ fn a_failing_pair_is_named() {
     }
 }
 
-/// ⑤ Multi-body propagation: a two-body value moves as one, volumes never double
+/// Multi-body propagation: a two-body value moves as one, volumes never double
 /// count.
 #[test]
 fn a_multi_body_value_moves_as_one() {
@@ -336,7 +336,7 @@ fn touching_pair() -> Vec<Step> {
     ]
 }
 
-/// ⑨ Picking: each index gives *its own* body, not just "a" body. Volumes alone would
+/// Picking: each index gives *its own* body, not just "a" body. Volumes alone would
 /// pass on an implementation that ignores the index (both cubes are 1.0), so the two
 /// bodies are given different sizes and each is scored against the one it should be.
 #[test]
@@ -378,7 +378,7 @@ fn each_index_gives_its_own_body() {
     );
 }
 
-/// ⑩ **The source survives its body being used.** This is the whole reason `Body`
+/// **The source survives its body being used.** This is the whole reason `Body`
 /// copies: `take` consumes the *originals* and leaves a value holding fresh ones, so a
 /// body that shared its source's handle would retire that handle out from under it.
 /// Drop the copy in `Step::Body` and this is what goes red.
@@ -408,7 +408,7 @@ fn taking_a_body_leaves_the_source_whole() {
     assert!((vol(&out, 5) - 2.0).abs() < 1e-9, "and all of its material");
 }
 
-/// ⑪ Asking for a body that is not there is named, in the script's own terms.
+/// Asking for a body that is not there is named, in the script's own terms.
 #[test]
 fn a_body_index_past_the_end_is_named() {
     let mut steps = touching_pair();
@@ -427,7 +427,7 @@ fn a_body_index_past_the_end_is_named() {
     assert!(text.contains('5'), "and which was asked for: {text}");
 }
 
-/// ⑫ `auto_copies` counts copies inserted **before a consumption** — inspector
+/// `auto_copies` counts copies inserted **before a consumption** — inspector
 /// information about what value semantics cost. `Body`'s copy is the operation itself,
 /// so counting it would inflate a number whose whole meaning is "copies you did not
 /// ask for".
@@ -452,7 +452,7 @@ fn taking_a_body_is_not_an_automatic_copy() {
     );
 }
 
-/// ⑬ The number a rejection quotes and the number `Body` takes are the same number.
+/// The number a rejection quotes and the number `Body` takes are the same number.
 /// A blamed `body k` the script cannot then point at would make the message a lie.
 #[test]
 fn the_blamed_body_index_is_the_one_body_takes() {

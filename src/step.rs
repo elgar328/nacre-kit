@@ -88,7 +88,7 @@ pub enum WorldPlane {
     ZX,
 }
 
-/// Where a sketch lives: a world plane directly (the K2 spelling), or a plane *value*
+/// Where a sketch lives: a world plane directly, or a plane *value*
 /// produced by [`Step::Plane`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum PlaneRef {

@@ -47,8 +47,8 @@ fn err_of(steps: &[Step]) -> String {
     }
 }
 
-/// ① A world plane **value** builds the same solid as the K2 world-plane sketch, bit
-/// for bit — in both directions and two-sided.
+/// A world plane **value** builds the same solid as a sketch on the world plane directly
+/// (`PlaneRef::World`), bit for bit — in both directions and two-sided.
 #[test]
 fn a_world_plane_value_is_the_world_plane() {
     for dist in [Dist::One(2.0), Dist::One(-2.0), Dist::Both(-1.0, 2.0)] {
@@ -71,7 +71,7 @@ fn a_world_plane_value_is_the_world_plane() {
     }
 }
 
-/// ② Sketches live on moved and tilted planes: a prism's volume is area × height
+/// Sketches live on moved and tilted planes: a prism's volume is area × height
 /// regardless of the plane's attitude, and a moved origin moves the solid.
 #[test]
 fn moved_and_tilted_planes_carry_sketches() {
@@ -116,7 +116,7 @@ fn moved_and_tilted_planes_carry_sketches() {
     assert!((volume_of(&steps, 2) - 9.0).abs() < 1e-9);
 }
 
-/// ③ `plane(p, { offset })` interns onto the very plane a box top already lies on —
+/// `plane(p, { offset })` interns onto the very plane a box top already lies on —
 /// the same kernel handle, not a second plane an ulp away — and a sketch on it sits
 /// at the offset, and extrudes either way off it.
 #[test]
@@ -174,7 +174,7 @@ fn an_offset_plane_interns_onto_the_box_top() {
     }
 }
 
-/// ④ The queries: a box reports its eight vertices and six faces, with the report
+/// The queries: a box reports its eight vertices and six faces, with the report
 /// values a selector would filter on.
 #[test]
 fn queries_report_what_selectors_pick() {
@@ -212,7 +212,7 @@ fn queries_report_what_selectors_pick() {
     assert_eq!(top.center, [2.0, 2.0, 2.0]);
 }
 
-/// ⑤ Queries answer only for solids — a sketch or plane value is `None`.
+/// Queries answer only for solids — a sketch or plane value is `None`.
 #[test]
 fn queries_refuse_non_solids() {
     let steps = vec![
@@ -228,7 +228,7 @@ fn queries_refuse_non_solids() {
     }
 }
 
-/// ⑥ A three-point plane extrudes either way in its own frame — backward is a negative sweep,
+/// A three-point plane extrudes either way in its own frame — backward is a negative sweep,
 /// and the forward and backward prisms meet only on their base; a range that ends on the plane
 /// is that backward sweep. A range **off** the plane still declines: its start plane is a
 /// parallel re-statement whose axes are the user's statement to make, not the kit's to invent.
@@ -280,7 +280,7 @@ fn a_points_plane_extrudes_both_ways_but_ranges_from_its_own_statement() {
     );
 }
 
-/// ⑥b An offset over a three-point plane has no exact re-statement to pin its frame —
+/// An offset over a three-point plane has no exact re-statement to pin its frame —
 /// honest reject at the statement, not a silently-unpinned direction later.
 #[test]
 fn an_offset_over_a_points_plane_is_refused() {
@@ -303,7 +303,7 @@ fn an_offset_over_a_points_plane_is_refused() {
     assert!(msg.contains("irrational"), "{msg}");
 }
 
-/// ⑦ Degenerate point statements name no plane.
+/// Degenerate point statements name no plane.
 #[test]
 fn collinear_points_name_no_plane() {
     let steps = vec![Step::Plane {

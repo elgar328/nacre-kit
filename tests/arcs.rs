@@ -83,7 +83,7 @@ fn pen_slot(len: f64, r: f64) -> PenPath {
     }
 }
 
-/// ① A rounded rectangle is the rectangle minus four `(1 − π/4)·r²` corners — the fillet's
+/// A rounded rectangle is the rectangle minus four `(1 − π/4)·r²` corners — the fillet's
 /// quarter arcs stand as cylinder walls, so `π` is in the volume exactly where it belongs.
 #[test]
 fn a_rounded_rectangle_loses_its_corners() {
@@ -101,7 +101,7 @@ fn a_rounded_rectangle_loses_its_corners() {
     );
 }
 
-/// ② Two fillets that meet exactly are one half circle: `rect(30 × 10, { fillet: 5 })` is a slot.
+/// Two fillets that meet exactly are one half circle: `rect(30 × 10, { fillet: 5 })` is a slot.
 /// The kernel's normal form merges the two quarter arcs, so the solid has six faces — two caps,
 /// two flat walls, two half cylinders — not eight.
 #[test]
@@ -120,7 +120,7 @@ fn two_fillets_that_meet_make_a_slot() {
     assert!(e.contains("overlap"), "{e}");
 }
 
-/// ③ `close()` on a path whose last arc lands on the start draws nothing (the kernel refuses a
+/// `close()` on a path whose last arc lands on the start draws nothing (the kernel refuses a
 /// zero-length edge, so this rule is what makes the slot legal): the slot is `rect + πr²` and
 /// its outline is one ring — two lines, two half circles — so the solid has six faces.
 #[test]
@@ -143,7 +143,7 @@ fn a_pen_slot_closes_on_its_last_arc() {
     );
 }
 
-/// ④ A negative extrude sweeps the slot against its plane's normal in the same frame — its arcs
+/// A negative extrude sweeps the slot against its plane's normal in the same frame — its arcs
 /// and their sweeps stay as written — and the footprint, hence the volume, is the same.
 #[test]
 fn a_slot_extruded_backward_keeps_its_footprint() {
@@ -174,7 +174,7 @@ fn a_slot_extruded_backward_keeps_its_footprint() {
     );
 }
 
-/// ⑤ `cylinder()` is sugar: a circle sketch extruded is the same solid, bit for bit — and so
+/// `cylinder()` is sugar: a circle sketch extruded is the same solid, bit for bit — and so
 /// is the circle said by diameter, halved in rationals. This is the lock that keeps the
 /// primitive and the sketch on one road.
 #[test]
@@ -217,7 +217,7 @@ fn a_circle_sketch_is_the_cylinder() {
     );
 }
 
-/// ⑥ A plate with a circular hole and a slot: the sketch nests the circle as a hole (no
+/// A plate with a circular hole and a slot: the sketch nests the circle as a hole (no
 /// declaration), and the prism removes `πr²·h`.
 #[test]
 fn a_circle_inside_a_rectangle_is_a_hole() {
@@ -249,7 +249,7 @@ fn a_circle_inside_a_rectangle_is_a_hole() {
     assert_eq!(out.body_count_of(ValueId(1)), Some(1));
 }
 
-/// ⑦ Every refusal is a sentence: a corner beside an arc, a leaf of two arcs (the kernel's
+/// Every refusal is a sentence: a corner beside an arc, a leaf of two arcs (the kernel's
 /// own refusal, translated), a start off its circle's rational distance.
 #[test]
 fn the_refusals_say_what_is_wrong() {
@@ -325,7 +325,7 @@ fn the_refusals_say_what_is_wrong() {
     );
 }
 
-/// ⑧ **A user's assembly folds, in script order.** A filleted, bored plate (XY), a
+/// **A user's assembly folds, in script order.** A filleted, bored plate (XY), a
 /// slot-windowed vertical plate standing on it (ZX, `y ∈ [3, 4]`) and two triangular gussets (YZ)
 /// fuse into one body whose volume is the parts' algebra, `48 + (34 − π/4) + 2 · 7.5` — the parts
 /// touch along faces and overlap nowhere. The hard places are faces that come close without
@@ -485,7 +485,7 @@ fn a_filleted_profile_extrudes_across_its_plane() {
     assert!((b.as_array()[2] - 5.0).abs() < 1e-12, "{:?}", b.as_array());
 }
 
-/// ⑨ **A user's rib plate**: a 90 × 50 plate with every corner filleted and four bores, and two
+/// **A user's rib plate**: a 90 × 50 plate with every corner filleted and four bores, and two
 /// stepped ribs standing on it. The plate's cap ring has eight fillet tangencies and no
 /// three-plane corner, so a ring-against-disk question needs witnesses beyond three-plane names.
 ///
@@ -1132,7 +1132,7 @@ fn a_fillet_swept_both_ways_and_fused_meets_itself_on_a_cylinder() {
     assert_eq!(v.bodies.len(), 1);
 }
 
-/// ⑩ **A rib turned 37° off the middle of the user's rib plate**: the plate of ⑨ (every corner
+/// **A rib turned 37° off the middle of the user's rib plate**: the plate of the rib-plate test above (every corner
 /// filleted, four bores) and a `5×5×10` block standing on `z = 6`, turned 37° about `z` and moved
 /// where its wall planes run through the corner fillets — one fillet, two, and two with bores'
 /// boxes beside. Each wall plane has no world statement and cuts a fillet along its rulings while

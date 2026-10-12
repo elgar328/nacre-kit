@@ -133,7 +133,7 @@ fn both_directions_share_the_plane() {
     assert_eq!(out.auto_copies, vec![3, 3]);
 }
 
-/// C3 — a two-sided extrude straddles the plane: one body per island, correct volume
+/// A two-sided extrude straddles the plane: one body per island, correct volume
 /// and z-range, and no correspondence bookkeeping (every prism goes into one fold).
 #[test]
 fn a_two_sided_extrude_straddles_the_plane() {
@@ -156,7 +156,7 @@ fn a_two_sided_extrude_straddles_the_plane() {
     assert_close(hi.as_array(), [4.0, 3.0, 2.0], "hi");
 }
 
-/// C3 — islands stay separate bodies through a two-sided extrude, each one body.
+/// Islands stay separate bodies through a two-sided extrude, each one body.
 #[test]
 fn islands_survive_a_two_sided_extrude() {
     let sq = |a: f64, b: f64| PenPath {
