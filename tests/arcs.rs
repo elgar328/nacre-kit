@@ -1131,3 +1131,86 @@ fn a_fillet_swept_both_ways_and_fused_meets_itself_on_a_cylinder() {
         .expect("solid");
     assert_eq!(v.bodies.len(), 1);
 }
+
+/// ⑩ **A rib turned 37° off the middle of the user's rib plate**: the plate of ⑨ (every corner
+/// filleted, four bores) and a `5×5×10` block standing on `z = 6`, turned 37° about `z` and moved
+/// where its wall planes run through the corner fillets — one fillet, two, and two with bores'
+/// boxes beside. Each wall plane has no world statement and cuts a fillet along its rulings while
+/// the block stands far from it; the kernel draws that section on the wall's own plane only.
+///
+/// **Every position builds, in every operation.** The block overlaps the 12-thick plate by
+/// `25·6 = 150` and touches no fillet or bore, so the volumes are arithmetic.
+#[test]
+fn a_rib_turned_37_degrees_builds_wherever_its_walls_cross_a_fillet() {
+    let fillet = Some(Corner::Fillet(5.0));
+    let plate = PenPath {
+        start: [-45.0, -25.0],
+        segs: vec![
+            SketchSeg::LineTo {
+                to: [45.0, -25.0],
+                corner: fillet,
+            },
+            SketchSeg::LineTo {
+                to: [45.0, 25.0],
+                corner: fillet,
+            },
+            SketchSeg::LineTo {
+                to: [-45.0, 25.0],
+                corner: fillet,
+            },
+        ],
+        close_corner: fillet,
+    };
+    let bores: Vec<Path> = [[38.0, 18.0], [38.0, -18.0], [-38.0, 18.0], [-38.0, -18.0]]
+        .into_iter()
+        .map(|center| Path::Circle {
+            center,
+            size: CircleSize::Diameter(7.0),
+        })
+        .collect();
+    let pi = std::f64::consts::PI;
+    let plate_v =
+        (90.0 * 50.0 - 4.0 * (25.0 - pi * 25.0 / 4.0)) * 12.0 - 4.0 * pi * 3.5 * 3.5 * 12.0;
+    for at in [[-12.0, -6.0], [-22.0, -14.0], [-16.0, -10.0], [-20.0, 0.0]] {
+        for (kind, want) in [
+            (nacre_kit::KitBool::Fuse, plate_v + 100.0),
+            (nacre_kit::KitBool::Cut, plate_v - 150.0),
+            (nacre_kit::KitBool::Common, 150.0),
+        ] {
+            let steps = vec![
+                Step::Sketch {
+                    plane: PlaneRef::World(WorldPlane::XY),
+                    paths: [vec![Path::Pen(plate.clone())], bores.clone()].concat(),
+                },
+                Step::Extrude {
+                    sketch: ValueId(0),
+                    dist: Dist::One(12.0),
+                },
+                Step::Cuboid {
+                    size: [5.0, 5.0, 10.0],
+                    at: nacre_kit::Anchor::Center([0.0, 0.0, 11.0]),
+                },
+                Step::Rotate {
+                    src: ValueId(2),
+                    axis: KitAxis::Z,
+                    deg: 37.0,
+                    pivot: Pivot::Origin,
+                },
+                Step::Translate {
+                    src: ValueId(3),
+                    offset: [at[0], at[1], 0.0],
+                },
+                Step::Boolean {
+                    kind,
+                    args: vec![ValueId(1), ValueId(4)],
+                },
+            ];
+            let out = out_of(&steps);
+            let got = volume(&out, 5);
+            assert!(
+                (got - want).abs() < 1e-9 * want.max(1.0),
+                "{at:?} {kind:?}: got {got}, want {want}"
+            );
+        }
+    }
+}
