@@ -21,8 +21,8 @@ use nacre::topo::Solid;
 pub struct StepExport {
     /// The file's text.
     pub text: String,
-    /// What `nacre::ops::refine_caches` raised before writing, and what it left — a value left
-    /// undecided or unrealized is written at the figure its construction gave.
+    /// What `nacre::ops::refine_caches_of` raised over the written bodies, and what it left — a
+    /// value left undecided or unrealized is written at the figure its construction gave.
     pub refine: RefineReport,
 }
 
