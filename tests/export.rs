@@ -25,7 +25,7 @@ fn solids_in(text: &str) -> usize {
     model.scene().all_solids().count()
 }
 
-/// ★★ **The file holds the bodies the build shows, and only those.** The model keeps more live
+/// **The file holds the bodies the build shows, and only those.** The model keeps more live
 /// solids than it draws — here a box the display set leaves out, and a hollow box (one body with
 /// a cavity) that is shown — so writing the live set would write a solid nobody sees.
 #[test]
@@ -64,7 +64,7 @@ fn the_step_file_holds_the_shown_bodies_only() {
     assert_eq!(solids_in(&file.text), shown.len());
 }
 
-/// ★★ **The export door raises what a long history left at its construction figure.** A box turned
+/// **The export door raises what a long history left at its construction figure.** A box turned
 /// 7° and carried 300 recorded translations is past what the caches pay for at build time (the
 /// kernel's `translated_chain(300)`, said in steps), so its caches stand at the producer's
 /// figures; the door raises the shown box's, and leaves nothing behind.
@@ -103,7 +103,7 @@ fn the_export_door_raises_a_long_history() {
     assert_eq!(solids_in(&file.text), 1);
 }
 
-/// ★ **Same steps, same stamp, same bytes** — from two separate builds, so the agreement is the
+/// **Same steps, same stamp, same bytes** — from two separate builds, so the agreement is the
 /// build's and the door's determinism rather than one model answering twice. The stamp is the
 /// caller's and reaches the header verbatim.
 #[test]
