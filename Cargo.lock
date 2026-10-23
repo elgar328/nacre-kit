@@ -360,6 +360,7 @@ dependencies = [
 name = "nacre-validate"
 version = "0.0.2-dev"
 dependencies = [
+ "nacre-exact",
  "nacre-geom",
  "nacre-math",
  "nacre-store",
