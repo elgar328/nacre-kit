@@ -302,7 +302,7 @@ fn every_reason_sentence_is_pinned() {
         (
             "vertex_names_absent_surface",
             RejectClass::NotSupported,
-            "the kernel does not build this — a corner of the result is defined by a surface the result keeps no face on — the corner cannot be re-derived from the solid itself [vertex_names_absent_surface]",
+            "the kernel does not build this — a corner of the result is defined by a surface none of the faces at that corner lies on — the corner cannot be re-derived from the solid itself [vertex_names_absent_surface]",
         ),
         (
             "precision_budget",

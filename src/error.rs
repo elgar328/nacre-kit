@@ -265,7 +265,7 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
             "an exact value this step needed does not fit the kernel's exact numbers — the shapes' coordinates or planes carry too many digits to combine exactly"
         }
         "vertex_names_absent_surface" => {
-            "a corner of the result is defined by a surface the result keeps no face on — the corner cannot be re-derived from the solid itself"
+            "a corner of the result is defined by a surface none of the faces at that corner lies on — the corner cannot be re-derived from the solid itself"
         }
         "precision_budget" => {
             "the motion history needs more precision than the judging budget holds"
