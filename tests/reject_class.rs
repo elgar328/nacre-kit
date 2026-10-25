@@ -227,7 +227,7 @@ fn an_operation_error_carries_no_class() {
     );
 }
 
-/// **Every shipped sentence, pinned** — table-driven over all twelve rows of the sentence table,
+/// **Every shipped sentence, pinned** — table-driven over all thirteen rows of the sentence table,
 /// plus the fallback for an unknown identifier and for a reason the table leaves out on purpose
 /// (`cylinder_stages_disagree`, a defect: the class sentence is the fact). Constructed directly (the fields are public) so every row is pinned
 /// even though only two have raise fixtures above; the kernel-side rule covers the rest (a reason
@@ -273,6 +273,11 @@ fn every_reason_sentence_is_pinned() {
             "cylinder_pair_contact",
             RejectClass::NotSupported,
             "the kernel does not build this — two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet [cylinder_pair_contact]",
+        ),
+        (
+            "cylinder_pair_edge",
+            RejectClass::NotSupported,
+            "the kernel does not build this — a body has a corner where two arcs meet — booleans on such a body are not built yet; a straight step between the arcs builds [cylinder_pair_edge]",
         ),
         (
             "cylinder_gate_undecided",

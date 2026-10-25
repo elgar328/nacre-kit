@@ -168,10 +168,6 @@ pub(crate) fn op_words(e: &OpError) -> String {
             "a distance is outside the exact decimal window, so it has no rational form to \
              build with"
         }
-        OpError::ArcsMeetAtVertex => {
-            "two arcs of different circles meet at a corner — the kernel has no definition \
-             for a point on two cylinders yet; a straight step between the arcs builds"
-        }
         // No words yet. Not measured reaching an author, so the identifier alone — which
         // is exactly what they said before this table existed. Deciding one is adding an
         // arm above; the fields some of them carry belong in the sentence when that
@@ -248,6 +244,10 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
         }
         "cylinder_pair_contact" => {
             "two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet"
+        }
+        "cylinder_pair_edge" => {
+            "a body has a corner where two arcs meet — booleans on such a body are not built yet; \
+             a straight step between the arcs builds"
         }
         "cylinder_gate_undecided" => {
             "the cylinder's placement could not be checked exactly against the other body"

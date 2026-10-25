@@ -271,9 +271,9 @@ fn the_refusals_say_what_is_wrong() {
     })])]);
     assert!(beside.contains("beside an arc"), "{beside}");
 
-    // A leaf: two quarter arcs of different circles between (0,0) and (5,5). The sketch court
-    // accepts the region; the prism builder has no corner for it.
-    let leaf = err_val(vec![
+    // A leaf: two quarter arcs of different circles between (0,0) and (5,5). It extrudes — its
+    // corners are points on two cylinders — and a boolean on it is refused by that name.
+    let leaf = || {
         sketch(vec![Path::Pen(PenPath {
             start: [0.0, 0.0],
             segs: vec![
@@ -287,20 +287,28 @@ fn the_refusals_say_what_is_wrong() {
                 },
             ],
             close_corner: None,
-        })]),
+        })])
+    };
+    let out = out_of(&[leaf(), extrude(0, 1.0)]);
+    let want = 25.0 * (PI / 2.0 - 1.0);
+    assert!((volume(&out, 1) - want).abs() < 1e-9, "{}", volume(&out, 1));
+    let fused = err_val(vec![
+        leaf(),
         extrude(0, 1.0),
+        Step::Cuboid {
+            size: [4.0, 4.0, 2.0],
+            at: nacre_kit::Anchor::Center([4.0, 4.0, 0.0]),
+        },
+        Step::Boolean {
+            kind: KitBool::Fuse,
+            args: vec![ValueId(1), ValueId(2)],
+        },
     ]);
-    let said = leaf.to_string();
-    assert!(said.contains("two arcs of different circles"), "{said}");
-    // Its words moved into the table with the rest; the arm that carried them here is
-    // gone, and the identifier came with them so this reads like every other refusal.
-    assert!(
-        said.contains("[ArcsMeetAtVertex]"),
-        "the handle to search with: {said}"
-    );
+    let said = fused.to_string();
+    assert!(said.contains("[cylinder_pair_edge]"), "{said}");
     // The step comes off the value, not the sentence: read out of a sentence it would be
     // loose — `starts_with("step 1")` also accepts `step 10`.
-    assert_eq!(leaf.step(), 1, "refused at the extrude: {said}");
+    assert_eq!(fused.step(), 3, "refused at the fuse: {said}");
 
     // A start `√2` from the centre builds: the kernel's truth is the squared radius, so the
     // quarter turn about (1, 1) from the origin
