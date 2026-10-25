@@ -240,7 +240,8 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
             "the result pinches along an edge — more than two faces share it"
         }
         "oblique_cylinder_cut" => {
-            "a flat face meets the cylinder at a slant — the elliptical crossing is not built yet"
+            "the plane of a slanted flat face cuts a cylinder's side — that elliptical section is \
+             not built yet, even where the face itself stays clear of the cylinder"
         }
         "cylinder_pair_contact" => {
             "two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet"
