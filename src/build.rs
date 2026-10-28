@@ -292,7 +292,7 @@ impl Builder {
                 deg,
                 pivot,
             } => {
-                let pivot_rat = self.pivot_point(step, *src, *pivot)?;
+                let pivot_rat = self.pivot_point(step, *pivot)?;
                 let angle =
                     Angle::from_deg(self.dec(step, *deg, "rotation angle")?).ok_or_else(|| {
                         KitError::Kernel {
@@ -1190,50 +1190,10 @@ impl Builder {
         Ok(SolidValue { bodies: out })
     }
 
-    fn pivot_point(
-        &mut self,
-        step: usize,
-        src: ValueId,
-        pivot: Pivot,
-    ) -> Result<[Rat; 3], KitError> {
+    fn pivot_point(&self, step: usize, pivot: Pivot) -> Result<[Rat; 3], KitError> {
         match pivot {
             Pivot::Origin => Ok([Rat::from_int(0); 3]),
             Pivot::At(p) => self.dec3(step, p, "rotation pivot"),
-            Pivot::Center => {
-                // Volume-weighted centroid across bodies — a report coordinate; the
-                // exact pivot is the rational it lifts to.
-                let v = self.solid_of(step, src)?.clone();
-                let (mut vol, mut acc) = (0.0f64, [0.0f64; 3]);
-                for &h in &v.bodies {
-                    let p =
-                        nacre::props::mass_props(&self.model, h).map_err(|e| KitError::Kernel {
-                            step,
-                            what: format!("{e:?}"),
-                            class: None,
-                            blame: None,
-                            mark: None,
-                        })?;
-                    let c =
-                        nacre::props::centroid(&self.model, h).map_err(|e| KitError::Kernel {
-                            step,
-                            what: format!("{e:?}"),
-                            class: None,
-                            blame: None,
-                            mark: None,
-                        })?;
-                    vol += p.volume;
-                    for (a, x) in acc.iter_mut().zip(c.as_array()) {
-                        *a += p.volume * x;
-                    }
-                }
-                if vol == 0.0 {
-                    return Err(KitError::Program {
-                        step,
-                        what: "pivot \"center\" of an empty value".into(),
-                    });
-                }
-                self.dec3(step, acc.map(|a| a / vol), "pivot (center)")
-            }
         }
     }
 

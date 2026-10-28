@@ -59,14 +59,13 @@ pub enum KitAxis {
     Z,
 }
 
-/// What a rotation turns about.
+/// What a rotation turns about — the origin or a stated point. There is no "centre": a solid's
+/// centroid is a measurement (`f64`, and on a curved solid in general a number with π in it), while
+/// a pivot places geometry exactly, so it is a number the script states.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Pivot {
     /// The world origin.
     Origin,
-    /// The value's own centroid (volume-weighted across bodies) — a *report* coordinate,
-    /// lifted to an exact rational pivot; outside the decimal window it rejects honestly.
-    Center,
     /// A stated point.
     At([f64; 3]),
 }
