@@ -324,6 +324,7 @@ name = "nacre-step"
 version = "0.0.2-dev"
 dependencies = [
  "brep-to-step",
+ "nacre-exact",
  "nacre-geom",
  "nacre-math",
  "nacre-store",
