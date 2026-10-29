@@ -5,7 +5,10 @@
 //! step promises: the anchor arithmetic is exact, a drill standing through a plate
 //! actually removes `πr²t`, and every refusal has a sentence.
 
-use nacre_kit::{Anchor, CylAnchor, KitAxis, KitBool, Step, ValueId, build};
+use nacre_kit::{
+    Anchor, CircleSize, CylAnchor, FaceRef, KitAxis, KitBool, Path, PlaneRef, Step, ValueId,
+    WorldPlane, build,
+};
 
 fn v(i: u32) -> ValueId {
     ValueId(i)
@@ -363,4 +366,72 @@ fn the_anchor_runs_along_the_axis_too() {
         (lo[0] + 2.0).abs() < 1e-9 && (hi[0] - 4.0).abs() < 1e-9,
         "{lo:?} {hi:?}"
     );
+}
+
+/// A pin over a plate's edge takes the next boolean, whichever way the script makes it — a
+/// cylinder fused on, or a circle padded from the top face. Its rim crosses the edge where the
+/// plate's top and the pin's overhang are one plane. The next boolean is a box far from the pin,
+/// half inside the plate: `125`.
+#[test]
+fn a_pin_over_a_plates_edge_takes_the_next_boolean() {
+    let plate = cuboid([0.0; 3], [40.0, 40.0, 10.0]);
+    let pinned = 16000.0 + 12.0 * PI;
+    let fused = vec![
+        plate.clone(),
+        Step::Cylinder {
+            radius: 2.0,
+            height: 3.0,
+            at: CylAnchor::Base([39.0, 20.0, 10.0]),
+            axis: KitAxis::Z,
+        },
+        Step::Boolean {
+            kind: KitBool::Fuse,
+            args: vec![v(0), v(1)],
+        },
+    ];
+    let top = run(vec![plate.clone()])
+        .faces_of(v(0))
+        .expect("faces")
+        .into_iter()
+        .find(|f| f.normal == Some([0.0, 0.0, 1.0]))
+        .expect("the top face")
+        .face;
+    let padded = vec![
+        plate,
+        Step::Sketch {
+            plane: PlaneRef::World(WorldPlane::XY),
+            paths: vec![Path::Circle {
+                center: [39.0, 20.0],
+                size: CircleSize::Radius(2.0),
+            }],
+        },
+        Step::Pad {
+            face: FaceRef {
+                of: v(0),
+                face: top,
+            },
+            sketch: v(1),
+            dist: 3.0,
+        },
+    ];
+    for prefix in [fused, padded] {
+        assert!((vol(&run(prefix.clone()), 2) - pinned).abs() < 1e-9 * pinned);
+        for (kind, want) in [
+            (KitBool::Fuse, pinned + 125.0),
+            (KitBool::Cut, pinned - 125.0),
+            (KitBool::Common, 125.0),
+        ] {
+            let mut steps = prefix.clone();
+            steps.push(cuboid([22.5, 5.5, 5.0], [5.0, 5.0, 10.0]));
+            steps.push(Step::Boolean {
+                kind,
+                args: vec![v(2), v(3)],
+            });
+            let got = vol(&run(steps), 4);
+            assert!(
+                (got - want).abs() < 1e-9 * want,
+                "{kind:?}: {got} vs {want}"
+            );
+        }
+    }
 }
