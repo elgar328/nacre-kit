@@ -267,7 +267,7 @@ fn every_reason_sentence_is_pinned() {
         (
             "oblique_cylinder_cut",
             RejectClass::NotSupported,
-            "the kernel does not build this — the plane of a slanted flat face cuts a cylinder's side — that elliptical section is not built yet, even where the face itself stays clear of the cylinder [oblique_cylinder_cut]",
+            "the kernel does not build this — a slanted flat face comes close to a cylinder's side or has a curved edge, or its plane meets that side in part of an ellipse — across a rim, on a partial side such as a fillet, or where another face cuts it — or sections it beside a cylinder of another direction; none of these is built yet [oblique_cylinder_cut]",
         ),
         (
             "cylinder_pair_contact",

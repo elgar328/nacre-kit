@@ -240,8 +240,10 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
             "the result pinches along an edge — more than two faces share it"
         }
         "oblique_cylinder_cut" => {
-            "the plane of a slanted flat face cuts a cylinder's side — that elliptical section is \
-             not built yet, even where the face itself stays clear of the cylinder"
+            "a slanted flat face comes close to a cylinder's side or has a curved edge, or its \
+             plane meets that side in part of an ellipse — across a rim, on a partial side such as \
+             a fillet, or where another face cuts it — or sections it beside a cylinder of another \
+             direction; none of these is built yet"
         }
         "cylinder_pair_contact" => {
             "two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet"
