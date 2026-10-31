@@ -1222,3 +1222,74 @@ fn a_rib_turned_37_degrees_builds_wherever_its_walls_cross_a_fillet() {
         }
     }
 }
+
+/// **A slanted face whose plane runs through a fillet's corner.** The user's script: a plate in
+/// ZX (`z ∈ [0, 5]`, `x ∈ [−3.5, 3.5]`, one thick along `y`) with a square hole `z ∈ [1.5, 3.5]`,
+/// `x ∈ [−2, 0]` filleted `0.5`, and a YZ triangle `(1, 1)`, `(−1, 1)`, `(−1, 3)` extruded over
+/// `x ∈ [2, 3]`. The triangle's slanted face lies on `y + z = 2`, which the plate's bottom `y = 0`
+/// meets along `z = 2` — through the corners `(−2, 0, 2)` and `(0, 0, 2)` where two fillets meet
+/// the hole's walls `x = −2` and `x = 0`, four surfaces at each point, though the prism stands far
+/// from the hole. The plate is
+/// `35 − (3 + π/4)`, the prism `2`, and they share `1/2` (the triangle's part at `y ∈ [0, 1]`).
+/// The plate less the prism leaves a wedge of no thickness where the triangle's corner `(1, 1)`
+/// sits on the plate's face `y = 1` — refused for that, as it is with the apex moved off the
+/// fillet's corner.
+#[test]
+fn a_slanted_face_whose_plane_runs_through_a_fillets_corner_fuses() {
+    let plate = PenPath {
+        start: [0.0, -3.5],
+        segs: vec![
+            line_to([5.0, -3.5]),
+            line_to([5.0, 3.5]),
+            line_to([0.0, 3.5]),
+        ],
+        close_corner: None,
+    };
+    let prism = PenPath {
+        start: [1.0, 1.0],
+        segs: vec![line_to([-1.0, 1.0]), line_to([-1.0, 3.0])],
+        close_corner: None,
+    };
+    let steps = |kind: KitBool| {
+        vec![
+            Step::Sketch {
+                plane: PlaneRef::World(WorldPlane::ZX),
+                paths: vec![
+                    Path::Pen(plate.clone()),
+                    Path::Pen(rounded_rect_at(1.5, -2.0, 2.0, 2.0, 0.5)),
+                ],
+            }, // 0
+            extrude(0, 1.0), // 1
+            Step::Sketch {
+                plane: PlaneRef::World(WorldPlane::YZ),
+                paths: vec![Path::Pen(prism.clone())],
+            }, // 2
+            Step::Extrude {
+                sketch: ValueId(2),
+                dist: Dist::Both(2.0, 3.0),
+            }, // 3
+            Step::Boolean {
+                kind,
+                args: vec![ValueId(1), ValueId(3)],
+            }, // 4
+        ]
+    };
+    let plate_v = 32.0 - PI / 4.0;
+    for (kind, want) in [(KitBool::Fuse, plate_v + 1.5), (KitBool::Common, 0.5)] {
+        let out = out_of(&steps(kind));
+        assert!(
+            (volume(&out, 1) - plate_v).abs() < 1e-9,
+            "the plate: {}",
+            volume(&out, 1)
+        );
+        let got = volume(&out, 4);
+        assert!(
+            (got - want).abs() < 1e-9,
+            "{kind:?}: got {got}, want {want}"
+        );
+        let violations = nacre::validate::validate(&out.model);
+        assert!(violations.is_empty(), "{kind:?}: {violations:?}");
+    }
+    let said = err_of(steps(KitBool::Cut));
+    assert!(said.contains("[self_touching_result]"), "{said}");
+}

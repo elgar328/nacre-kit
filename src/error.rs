@@ -241,7 +241,7 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
         }
         "oblique_cylinder_cut" => {
             "a slanted flat face comes close to a cylinder's side or has a curved edge, or its \
-             plane touches a rim of that side at a single point or runs through a corner of it, or \
+             plane touches a rim of that side at a single point or touches a corner of it from inside, or \
              sections it beside a cylinder of another direction; none of these is built yet"
         }
         "cylinder_pair_contact" => {
