@@ -741,7 +741,6 @@ impl Builder {
                 }
             }
         };
-        self.model.rebuild_adjacency();
         Ok(SolidValue {
             bodies: vec![solid],
         })
@@ -902,7 +901,6 @@ impl Builder {
                 }
             }
         };
-        self.model.rebuild_adjacency();
         Ok(SolidValue {
             bodies: vec![solid],
         })
@@ -920,7 +918,6 @@ impl Builder {
         match dist {
             Dist::One(d) => {
                 let bodies = self.extrude_one(step, sketch, d)?;
-                self.model.rebuild_adjacency();
                 Ok(SolidValue { bodies })
             }
             // **A range says where the sketch starts, not that a solid moves.** It used
@@ -953,7 +950,6 @@ impl Builder {
                 } else {
                     self.extrude_span(step, sketch, lo, hi - lo)?
                 };
-                self.model.rebuild_adjacency();
                 Ok(SolidValue { bodies })
             }
         }
@@ -1186,7 +1182,6 @@ impl Builder {
         // both sides, one that reaches through everything leaves none; the rest ride along.
         let mut out = bodies;
         out.splice(bi..=bi, pieces);
-        self.model.rebuild_adjacency();
         Ok(SolidValue { bodies: out })
     }
 
@@ -1223,7 +1218,6 @@ impl Builder {
                 }
             }
         }
-        self.model.rebuild_adjacency();
         Ok(SolidValue { bodies: out })
     }
 
@@ -1252,7 +1246,6 @@ impl Builder {
             KitBool::Cut => self.cut_fold(step, taken)?,
             KitBool::Common => self.common_fold(step, taken)?,
         };
-        self.model.rebuild_adjacency();
         Ok(SolidValue { bodies })
     }
 

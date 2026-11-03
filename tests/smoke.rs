@@ -26,7 +26,6 @@ fn a_cuboid_by_the_extrude_road_has_its_volume() {
     let OpOutput::Extrude { solid, .. } = out else {
         panic!("extrude output shape");
     };
-    m.rebuild_adjacency();
     let v = nacre::props::mass_props(&m, solid)
         .expect("mass props")
         .volume;
