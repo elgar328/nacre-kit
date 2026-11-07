@@ -240,10 +240,10 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
             "the result pinches along an edge — more than two faces share it"
         }
         "oblique_cylinder_cut" => {
-            "a slanted flat face would meet a cylinder's side along a curved edge, or its plane \
-             touches a circle of that side (a rim, or the edge of a hole in it) at a single point or \
-             touches a corner of it from inside, or it cuts that side beside a cylinder of another \
-             direction; none of these is built yet"
+            "a slanted flat face touches a circle of a cylinder's side (a rim, or the edge of a hole \
+             in it) at a single point or touches a corner of it from inside, or cuts that side beside \
+             a cylinder of another direction, or the body already has a curved edge where a slanted \
+             cut met a cylinder; none of these is built yet"
         }
         "cylinder_pair_contact" => {
             "two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet"
