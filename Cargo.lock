@@ -266,7 +266,6 @@ version = "0.0.2-dev"
 dependencies = [
  "astro-float",
  "nacre-exact",
- "nacre-math",
  "nacre-predicates",
  "num-bigint",
  "num-integer",
