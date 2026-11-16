@@ -246,7 +246,8 @@ fn reason_sentence(what: &str) -> Option<&'static str> {
              direction; none of these is built yet"
         }
         "cylinder_pair_contact" => {
-            "two cylinders touch or overlap — cylinder-with-cylinder booleans are not built yet"
+            "two cylinders may touch or overlap, or one cylinder is written two ways — booleans that \
+             meet a second cylinder are not built yet"
         }
         "cylinder_pair_edge" => {
             "a body has a corner where two arcs meet — booleans on such a body are not built yet; \

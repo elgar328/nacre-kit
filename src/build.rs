@@ -920,15 +920,10 @@ impl Builder {
                 let bodies = self.extrude_one(step, sketch, d)?;
                 Ok(SolidValue { bodies })
             }
-            // **A range says where the sketch starts, not that a solid moves.** It used
-            // to sweep **twice** — once each way from the plane — and fuse the halves. That cost a
-            // boolean per island and, worse, stated one cylinder twice: a fillet swept down and
-            // the same fillet swept up differ only in the axis's **sign**, which is not part of
-            // what the surface is, and the two statements met as a coincident pair the kernel
-            // refuses. So a filleted profile could not be extruded across its own plane at all.
-            //
-            // One sweep, from a plane stated at the range's start. No fuse — and no motion on the
-            // result, which a "sweep then translate" would have left behind.
+            // **A range says where the sketch starts, not that a solid moves.** One sweep, from a
+            // plane stated at the range's start: no boolean per island, as sweeping each way and
+            // fusing the halves would cost, and no motion on the result, which a "sweep then
+            // translate" would leave behind.
             Dist::Both(lo, hi) => {
                 // NaN is not ordered either, and this spelling says so — the same door
                 // `pad_pocket` uses for its own positive-depth demand.
