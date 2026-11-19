@@ -831,36 +831,9 @@ fn a_thick_drill_crosses_a_filleted_plate() {
 /// arrangement runs: `f = 6, 7, 8` all stop there, and `f = 5` — whose arc stays at `y ≥ 5` —
 /// builds (the test above). That is why the arrangement's own check is a **backstop**: with the
 /// question asked about the arc rather than the whole circle, nothing end-to-end reaches it.
-///
-/// The square plate at exactly the half-thickness keeps its own true refusal: the drill touches
-/// the caps, so the result touches itself.
 #[test]
 fn a_fillet_that_really_reaches_the_drill_is_refused_by_the_pair_rule() {
-    let case = |profile: PenPath, r: f64| -> String {
-        err_of(vec![
-            sketch(vec![Path::Pen(profile)]),
-            Step::Extrude {
-                sketch: ValueId(0),
-                dist: Dist::Both(-4.0, 4.0),
-            },
-            Step::Cylinder {
-                radius: r,
-                height: 30.0,
-                at: CylAnchor::Center([0.0, 0.0, 0.0]),
-                axis: KitAxis::Z,
-            },
-            Step::Rotate {
-                src: ValueId(2),
-                axis: KitAxis::Y,
-                deg: 90.0,
-                pivot: Pivot::Origin,
-            },
-            Step::Boolean {
-                kind: nacre_kit::KitBool::Cut,
-                args: vec![ValueId(1), ValueId(3)],
-            },
-        ])
-    };
+    let case = |profile: PenPath, r: f64| -> String { err_of(drill_through(profile, r)) };
     for f in [6.0, 7.0, 8.0] {
         let msg = case(rounded_rect_at(-10.0, -10.0, 20.0, 20.0, f), 4.5);
         assert!(msg.contains("cylinder_pair_contact"), "fillet {f}: {msg}");
@@ -869,7 +842,14 @@ fn a_fillet_that_really_reaches_the_drill_is_refused_by_the_pair_rule() {
     // do, so the same rule speaks.
     let msg = case(one_filleted_corner(-10.0, -10.0, 20.0, 20.0, 8.0), 4.5);
     assert!(msg.contains("cylinder_pair_contact"), "{msg}");
-    // No arc at all, and the drill exactly on the caps: a different and true refusal.
+}
+
+/// **A drill exactly as wide as the plate is thick cuts it in two.** The drill touches both caps
+/// along the lines it runs under them, and the plate's material either side of it meets the other
+/// side only along those lines: two bodies, each half of the plate less the drill's half disk over
+/// the plate's width (OCCT builds the same two).
+#[test]
+fn a_drill_touching_both_caps_cuts_the_plate_in_two() {
     let square = PenPath {
         start: [-10.0, -10.0],
         segs: vec![
@@ -888,8 +868,43 @@ fn a_fillet_that_really_reaches_the_drill_is_refused_by_the_pair_rule() {
         ],
         close_corner: None,
     };
-    let msg = case(square, 4.0);
-    assert!(msg.contains("self_touching"), "{msg}");
+    let out = out_of(&drill_through(square, 4.0));
+    let val = out.values[4]
+        .as_ref()
+        .and_then(|v| v.as_solid())
+        .expect("a solid");
+    assert_eq!(val.bodies.len(), 2, "the drill cuts the plate in two");
+    let want = 20.0 * 20.0 * 8.0 - PI * 16.0 * 20.0;
+    let got = val.volume(&out.model);
+    assert!((got - want).abs() < 1e-9, "got {got}, want {want}");
+}
+
+/// The plate over `profile`, eight thick about `z = 0`, less a drill of radius `r` along `x`
+/// through the origin, thirty long.
+fn drill_through(profile: PenPath, r: f64) -> Vec<Step> {
+    vec![
+        sketch(vec![Path::Pen(profile)]),
+        Step::Extrude {
+            sketch: ValueId(0),
+            dist: Dist::Both(-4.0, 4.0),
+        },
+        Step::Cylinder {
+            radius: r,
+            height: 30.0,
+            at: CylAnchor::Center([0.0, 0.0, 0.0]),
+            axis: KitAxis::Z,
+        },
+        Step::Rotate {
+            src: ValueId(2),
+            axis: KitAxis::Y,
+            deg: 90.0,
+            pivot: Pivot::Origin,
+        },
+        Step::Boolean {
+            kind: nacre_kit::KitBool::Cut,
+            args: vec![ValueId(1), ValueId(3)],
+        },
+    ]
 }
 
 /// **The far side of the pair rule.** A drill wide enough to reach the fillets is still refused
