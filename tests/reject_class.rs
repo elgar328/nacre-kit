@@ -272,7 +272,7 @@ fn every_reason_sentence_is_pinned() {
         (
             "cylinder_pair_contact",
             RejectClass::NotSupported,
-            "the kernel does not build this — two cylinders may touch or overlap, or one cylinder is written two ways — booleans that meet a second cylinder are not built yet [cylinder_pair_contact]",
+            "the kernel does not build this — two cylinders may touch or overlap — booleans that meet a second cylinder are not built yet [cylinder_pair_contact]",
         ),
         (
             "cylinder_pair_edge",
